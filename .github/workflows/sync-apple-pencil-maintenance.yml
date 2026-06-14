@@ -1,0 +1,117 @@
+# 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+
+name: Sync Apple Pencil maintenance branch
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Daily at 02:30 Asia/Shanghai.
+    - cron: "30 18 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-apple-pencil-maintenance
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Merge upstream main and verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout maintenance branch
+        uses: actions/checkout@v6
+        with:
+          ref: codex/self-hosted/apple-pencil-maintenance
+          fetch-depth: 0
+
+      - name: Merge upstream main
+        id: merge
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          before="$(git rev-parse HEAD)"
+          git remote add upstream https://github.com/saber-notes/saber.git
+          git fetch upstream main
+          git merge --no-edit upstream/main
+
+          after="$(git rev-parse HEAD)"
+          if [ "$before" = "$after" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install apt dependencies
+        if: steps.merge.outputs.changed == 'true'
+        uses: "./.github/shared_workflows/install_apt_dependencies"
+
+      - name: Setup cache
+        if: steps.merge.outputs.changed == 'true'
+        uses: actions/cache@v5
+        with:
+          path: |
+            .dart_tool/
+            .flutter-plugins-dependencies
+            build/
+            linux/flutter/ephemeral/
+            macos/Flutter/ephemeral/
+            packages/**/.dart_tool/
+            packages/**/.flutter-plugins-dependencies
+            packages/**/pubspec.lock
+            windows/flutter/ephemeral/
+            ~/.dartServer/
+            ~/.dart-tool/
+          key: ${{ runner.OS }}-saber-sync-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.OS }}-saber-sync-
+            ${{ runner.OS }}-saber-
+
+      - name: Setup Flutter
+        if: steps.merge.outputs.changed == 'true'
+        uses: adil192/setup-flutter-submodule@v3
+        with:
+          flutter-path: submodules/flutter
+
+      - name: Disable Flutter CLI animations
+        if: steps.merge.outputs.changed == 'true'
+        run: flutter config --no-cli-animations
+
+      - name: Install dependencies
+        if: steps.merge.outputs.changed == 'true'
+        run: flutter pub get
+
+      - name: Run tests
+        if: steps.merge.outputs.changed == 'true'
+        run: flutter test --no-pub
+
+      - name: Run static analysis
+        if: steps.merge.outputs.changed == 'true'
+        run: flutter analyze --no-pub
+
+      - name: Check formatting
+        if: steps.merge.outputs.changed == 'true'
+        run: dart format lib packages scripts test --output none --set-exit-if-changed
+
+      - name: Push verified branch
+        if: steps.merge.outputs.changed == 'true'
+        run: git push origin HEAD:codex/self-hosted/apple-pencil-maintenance
+
+      - name: Report no upstream changes
+        if: steps.merge.outputs.changed == 'false'
+        run: echo "codex/self-hosted/apple-pencil-maintenance is already up to date with upstream/main." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Explain failure notification
+        if: failure()
+        run: |
+          {
+            echo "### Apple Pencil branch sync failed"
+            echo
+            echo "GitHub will send an Actions failure notification email according to the repository owner's notification settings."
+            echo
+            echo "Open this run to inspect whether the failure came from an upstream merge conflict, tests, analysis, or formatting."
+          } >> "$GITHUB_STEP_SUMMARY"
