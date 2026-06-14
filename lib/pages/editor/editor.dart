@@ -1,3 +1,6 @@
+/// 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+library;
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -5,7 +8,7 @@ import 'dart:io';
 import 'package:collapsible/collapsible.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, visibleForTesting;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,6 +33,7 @@ import 'package:saber/components/toolbar/color_bar.dart';
 import 'package:saber/components/toolbar/editor_bottom_sheet.dart';
 import 'package:saber/components/toolbar/editor_page_manager.dart';
 import 'package:saber/components/toolbar/toolbar.dart';
+import 'package:saber/data/apple_pencil/apple_pencil_interaction.dart';
 import 'package:saber/data/editor/editor_core_info.dart';
 import 'package:saber/data/editor/editor_exporter.dart';
 import 'package:saber/data/editor/editor_history.dart';
@@ -47,25 +51,47 @@ import 'package:saber/data/tools/pen.dart';
 import 'package:saber/data/tools/pencil.dart';
 import 'package:saber/data/tools/select.dart';
 import 'package:saber/data/tools/shape_pen.dart';
+import 'package:saber/data/tools/stylus_hover_preview.dart';
+import 'package:saber/data/tools/stylus_sample.dart';
 import 'package:saber/i18n/strings.g.dart';
 import 'package:saber/pages/home/whiteboard.dart';
 import 'package:sbn/change.dart';
 import 'package:super_clipboard/super_clipboard.dart';
 
 typedef _PhotoInfo = ({Uint8List bytes, String extension});
+typedef _ApplePencilInteractionSubscription =
+    StreamSubscription<ApplePencilInteractionEvent>;
+typedef _ApplePencilHoverSubscription =
+    StreamSubscription<ApplePencilHoverEvent>;
 
 class Editor extends StatefulWidget {
-  Editor({super.key, String? path, this.customTitle, this.pdfPath})
-    : initialPath = path != null
-          ? Future.value(path)
-          : FileManager.newFilePath('/'),
-      needsNaming = path == null;
+  Editor({
+    super.key,
+    String? path,
+    this.customTitle,
+    this.pdfPath,
+    this.applePencilInteractionService,
+    this.applePencilHoverService,
+  }) : initialPath = path != null
+           ? Future.value(path)
+           : FileManager.newFilePath('/'),
+       needsNaming = path == null;
 
   final Future<String> initialPath;
   final bool needsNaming;
 
   final String? customTitle;
   final String? pdfPath;
+
+  /// Provides Apple Pencil hardware events.
+  ///
+  /// Tests can inject a fake service to avoid the native iOS channel.
+  final ApplePencilInteractionService? applePencilInteractionService;
+
+  /// Provides Apple Pencil hover events.
+  ///
+  /// Tests can inject a fake service to avoid the native iOS channel.
+  final ApplePencilHoverService? applePencilHoverService;
 
   /// The file extension used by the app.
   /// Files with this extension are
@@ -102,6 +128,9 @@ class EditorState extends State<Editor> {
   late var coreInfo = EditorCoreInfo.placeholder;
 
   final _canvasGestureDetectorKey = GlobalKey<CanvasGestureDetectorState>();
+  final _toolbarKey = GlobalKey<ToolbarState>();
+  _ApplePencilInteractionSubscription? _applePencilInteractionSubscription;
+  _ApplePencilHoverSubscription? _applePencilHoverSubscription;
   final _transformationController = TransformationController();
   double get scrollY {
     final transformation = _transformationController.value;
@@ -155,8 +184,11 @@ class EditorState extends State<Editor> {
   }();
   Tool get currentTool => _currentTool;
   set currentTool(Tool tool) {
+    if (tool is! Eraser && tool != _lastNonEraserTool) {
+      _previousNonTransientTool = _lastNonEraserTool;
+      _lastNonEraserTool = tool;
+    }
     _currentTool = tool;
-    if (tool is! Eraser) _lastNonEraserTool = tool;
     stows.lastTool.value = tool.toolId;
   }
 
@@ -171,7 +203,10 @@ class EditorState extends State<Editor> {
   ValueNotifier<QuillStruct?> quillFocus = ValueNotifier(null);
 
   /// The last non-Eraser [currentTool] value.
-  late Tool _lastNonEraserTool = Pen.currentPen;
+  late Tool _lastNonEraserTool = _currentTool is Eraser
+      ? Pen.currentPen
+      : _currentTool;
+  Tool? _previousNonTransientTool;
 
   /// If the stylus button is pressed, or was pressed, during the current draw gesture.
   ///
@@ -179,15 +214,53 @@ class EditorState extends State<Editor> {
   /// used since the stylus rear-end and stylus button currently act the same.
   /// If we add customized button bindings, we may have to separate this again.
   var stylusButtonWasPressed = false;
+  StylusHoverPreview? _stylusHoverPreview;
+
+  /// The current stylus hover preview, exposed for editor behavior tests.
+  @visibleForTesting
+  StylusHoverPreview? get stylusHoverPreview => _stylusHoverPreview;
+
+  Tool? _applePencilSqueezeRestoreTool;
+  var _applePencilSqueezeEraserActive = false;
 
   @override
   void initState() {
     DynamicMaterialApp.addFullscreenListener(_setState);
 
+    _listenToApplePencilInteractions();
+    _listenToApplePencilHover();
     _initAsync();
     _assignKeybindings();
 
     super.initState();
+  }
+
+  void _listenToApplePencilInteractions() {
+    final service =
+        widget.applePencilInteractionService ??
+        const EventChannelApplePencilInteractionService();
+    _applePencilInteractionSubscription = service.events.listen(
+      _handleApplePencilInteraction,
+      onError: (Object error, StackTrace stackTrace) {
+        log.warning(
+          'Apple Pencil interaction stream failed',
+          error,
+          stackTrace,
+        );
+      },
+    );
+  }
+
+  void _listenToApplePencilHover() {
+    final service =
+        widget.applePencilHoverService ??
+        const EventChannelApplePencilHoverService();
+    _applePencilHoverSubscription = service.events.listen(
+      _handleApplePencilHover,
+      onError: (Object error, StackTrace stackTrace) {
+        log.warning('Apple Pencil hover stream failed', error, stackTrace);
+      },
+    );
   }
 
   void _initAsync() async {
@@ -501,6 +574,122 @@ class EditorState extends State<Editor> {
     return null;
   }
 
+  void onStylusHover(PointerEvent event) {
+    if (!stows.applePencilTipPreview.value || coreInfo.readOnly) {
+      clearStylusHoverPreview();
+      return;
+    }
+
+    _setStylusHoverPreview(
+      globalPosition: event.position,
+      opacity: StylusHoverPreview.opacityFromDistance(
+        distance: event.distance,
+        distanceMax: event.distanceMax,
+      ),
+      invertedStylus: event.kind == PointerDeviceKind.invertedStylus,
+    );
+  }
+
+  void _handleApplePencilHover(ApplePencilHoverEvent event) {
+    if (!event.isActive) {
+      clearStylusHoverPreview();
+      return;
+    }
+
+    if (!stows.applePencilTipPreview.value || coreInfo.readOnly) {
+      clearStylusHoverPreview();
+      return;
+    }
+
+    final zOffset = event.zOffset;
+    _setStylusHoverPreview(
+      globalPosition: event.position,
+      opacity: zOffset == null
+          ? 0.45
+          : StylusHoverPreview.opacityFromDistance(
+              distance: zOffset.clamp(0.0, 1.0).toDouble(),
+              distanceMax: 1,
+            ),
+    );
+  }
+
+  void _setStylusHoverPreview({
+    required Offset globalPosition,
+    required double opacity,
+    bool invertedStylus = false,
+  }) {
+    final pageIndex = onWhichPageIsFocalPoint(globalPosition);
+    if (pageIndex == null) {
+      clearStylusHoverPreview();
+      return;
+    }
+
+    final renderBox = coreInfo.pages[pageIndex].renderBox;
+    if (renderBox == null) {
+      clearStylusHoverPreview();
+      return;
+    }
+
+    final preview = _stylusHoverPreviewForTool(
+      pageIndex: pageIndex,
+      position: renderBox.globalToLocal(globalPosition),
+      opacity: opacity,
+      invertedStylus: invertedStylus,
+    );
+    if (preview == null) {
+      clearStylusHoverPreview();
+      return;
+    }
+
+    if (_stylusHoverPreview == preview) return;
+    setState(() => _stylusHoverPreview = preview);
+  }
+
+  void clearStylusHoverPreview() {
+    if (_stylusHoverPreview == null) return;
+    if (!mounted) {
+      _stylusHoverPreview = null;
+      return;
+    }
+
+    setState(() => _stylusHoverPreview = null);
+  }
+
+  StylusHoverPreview? _stylusHoverPreviewForTool({
+    required int pageIndex,
+    required Offset position,
+    required double opacity,
+    bool invertedStylus = false,
+  }) {
+    final tool = invertedStylus ? Eraser() : currentTool;
+
+    if (tool is Eraser) {
+      return StylusHoverPreview(
+        pageIndex: pageIndex,
+        position: position,
+        radius: tool.size,
+        color: Colors.black,
+        opacity: opacity,
+        kind: StylusHoverPreviewKind.eraser,
+        invertedStylus: invertedStylus,
+      );
+    }
+
+    if (tool is Pen) {
+      return StylusHoverPreview(
+        pageIndex: pageIndex,
+        position: position,
+        radius: tool.options.size / 2,
+        color: tool.color,
+        opacity: opacity,
+        kind: StylusHoverPreviewKind.drawing,
+        invertedStylus: invertedStylus,
+      );
+    }
+
+    return null;
+  }
+
   /// The position of the previous draw gesture event.
   /// Used to move a selection.
   Offset previousPosition = .zero;
@@ -512,9 +701,10 @@ class EditorState extends State<Editor> {
   var isHovering = true;
   int? dragPageIndex;
   PointerDeviceKind? currentPointerKind;
-  double? currentPressure;
+  StylusSample? currentStylusSample;
   bool isDrawGesture(ScaleStartDetails details) {
     if (coreInfo.readOnly) return false;
+    clearStylusHoverPreview();
 
     CanvasImage.activeListener
         .notifyListenersPlease(); // un-select active image
@@ -547,7 +737,7 @@ class EditorState extends State<Editor> {
     } else if (stows.editorFingerDrawing.value ||
         currentPointerKind == PointerDeviceKind.stylus ||
         currentPointerKind == PointerDeviceKind.invertedStylus ||
-        currentPressure != null) {
+        currentStylusSample?.isStylus == true) {
       return true;
     } else {
       log.fine('Non-stylus found, rejected stroke');
@@ -556,6 +746,8 @@ class EditorState extends State<Editor> {
   }
 
   void onDrawStart(ScaleStartDetails details) {
+    clearStylusHoverPreview();
+
     final page = coreInfo.pages[dragPageIndex!];
     final position = page.renderBox!.globalToLocal(details.focalPoint);
     history.canRedo = false;
@@ -565,7 +757,7 @@ class EditorState extends State<Editor> {
         position,
         page,
         dragPageIndex!,
-        currentPressure,
+        currentStylusSample,
       );
     } else if (currentTool is Eraser) {
       for (final stroke in (currentTool as Eraser).checkForOverlappingStrokes(
@@ -606,7 +798,7 @@ class EditorState extends State<Editor> {
     final offset = position - previousPosition;
 
     if (currentTool is Pen) {
-      (currentTool as Pen).onDragUpdate(position, currentPressure);
+      (currentTool as Pen).onDragUpdate(position, currentStylusSample);
       page.redrawStrokes();
     } else if (currentTool is Eraser) {
       for (final stroke in (currentTool as Eraser).checkForOverlappingStrokes(
@@ -729,9 +921,9 @@ class EditorState extends State<Editor> {
     });
   }
 
-  void updatePointerData(PointerDeviceKind kind, double? pressure) {
-    currentPointerKind = kind;
-    currentPressure = pressure;
+  void updatePointerData(StylusSample sample) {
+    currentPointerKind = sample.kind;
+    currentStylusSample = sample.isStylus ? sample : null;
   }
 
   void onHovering() {
@@ -756,6 +948,134 @@ class EditorState extends State<Editor> {
       if (currentTool is Eraser) {
         currentTool = _lastNonEraserTool;
       }
+    }
+
+    if (mounted) setState(() {});
+  }
+
+  void _handleApplePencilInteraction(ApplePencilInteractionEvent event) {
+    if (coreInfo.readOnly) return;
+
+    final preference = switch (event.gesture) {
+      ApplePencilHardwareGesture.doubleTap =>
+        stows.applePencilDoubleTapAction.value,
+      ApplePencilHardwareGesture.squeeze =>
+        stows.applePencilSqueezeAction.value,
+    };
+    final action = preference.resolve(event);
+    if (action == ApplePencilAction.disabled) return;
+
+    switch (event.gesture) {
+      case ApplePencilHardwareGesture.doubleTap:
+        _handleApplePencilDoubleTap(event, action);
+      case ApplePencilHardwareGesture.squeeze:
+        _handleApplePencilSqueeze(event, action);
+    }
+  }
+
+  void _handleApplePencilDoubleTap(
+    ApplePencilInteractionEvent event,
+    ApplePencilAction action,
+  ) {
+    if (event.phase != ApplePencilInteractionPhase.ended) return;
+
+    _runApplePencilAction(action);
+  }
+
+  void _handleApplePencilSqueeze(
+    ApplePencilInteractionEvent event,
+    ApplePencilAction action,
+  ) {
+    switch (event.phase) {
+      case ApplePencilInteractionPhase.began:
+        if (action == ApplePencilAction.toggleEraser) {
+          _beginApplePencilSqueezeEraser();
+          return;
+        }
+        _runApplePencilAction(action);
+      case ApplePencilInteractionPhase.changed:
+        return;
+      case ApplePencilInteractionPhase.ended:
+      case ApplePencilInteractionPhase.cancelled:
+        _endApplePencilSqueezeEraser();
+    }
+  }
+
+  void _beginApplePencilSqueezeEraser() {
+    if (!stows.disableEraserAfterUse.value) {
+      _setTool(Eraser());
+      return;
+    }
+
+    if (_applePencilSqueezeEraserActive) return;
+    if (currentTool is Eraser) return;
+
+    _applePencilSqueezeRestoreTool = currentTool;
+    _applePencilSqueezeEraserActive = true;
+    currentTool = Eraser();
+    if (mounted) setState(() {});
+  }
+
+  void _endApplePencilSqueezeEraser() {
+    if (!_applePencilSqueezeEraserActive) return;
+
+    final restoreTool = _applePencilSqueezeRestoreTool;
+    _applePencilSqueezeRestoreTool = null;
+    _applePencilSqueezeEraserActive = false;
+
+    if (restoreTool == null) return;
+    if (currentTool is! Eraser) return;
+
+    currentTool = restoreTool;
+    if (mounted) setState(() {});
+  }
+
+  void _runApplePencilAction(ApplePencilAction action) {
+    switch (action) {
+      case ApplePencilAction.system:
+      case ApplePencilAction.disabled:
+        return;
+      case ApplePencilAction.toggleEraser:
+        _setTool(Eraser());
+      case ApplePencilAction.switchPreviousTool:
+        final previousTool = _previousNonTransientTool;
+        if (previousTool == null || previousTool == currentTool) return;
+        _setTool(previousTool);
+      case ApplePencilAction.showColorPalette:
+        _revealToolbar();
+        _toolbarKey.currentState?.toggleColorOptions();
+      case ApplePencilAction.showInkAttributes:
+        _revealToolbar();
+        _toolbarKey.currentState?.toggleCurrentToolOptions();
+      case ApplePencilAction.showToolPalette:
+        _revealToolbar();
+        _toolbarKey.currentState?.toggleCurrentToolOptions();
+      case ApplePencilAction.runSystemShortcut:
+        log.info('Apple Pencil system shortcut action is not supported');
+    }
+  }
+
+  void _revealToolbar() {
+    if (!DynamicMaterialApp.isFullscreen) return;
+    if (stows.editorToolbarShowInFullscreen.value) return;
+
+    DynamicMaterialApp.setFullscreen(false, updateSystem: true);
+  }
+
+  void _setTool(Tool tool) {
+    if (tool is Eraser && currentTool is Eraser) {
+      // setTool(Eraser) is a special case to toggle the eraser on/off
+      tool = _lastNonEraserTool;
+    }
+
+    currentTool = tool;
+
+    if (tool is Highlighter) {
+      Highlighter.currentHighlighter = tool;
+    } else if (tool is Pencil) {
+      Pencil.currentPencil = tool;
+    } else if (tool is Pen) {
+      Pen.currentPen = tool;
     }
 
     if (mounted) setState(() {});
@@ -1377,6 +1697,8 @@ class EditorState extends State<Editor> {
       onDrawEnd: onDrawEnd,
       onHovering: onHovering,
       onHoveringEnd: onHoveringEnd,
+      onStylusHover: onStylusHover,
+      onStylusHoverEnd: clearStylusHoverPreview,
       onStylusButtonChanged: onStylusButtonChanged,
       updatePointerData: updatePointerData,
       undo: undo,
@@ -1399,6 +1721,7 @@ class EditorState extends State<Editor> {
           setAsBackground: null,
           currentTool: currentTool,
           currentScale: double.minPositive,
+          stylusHoverPreview: null,
         );
       },
       transformationController: _transformationController,
@@ -1422,25 +1745,9 @@ class EditorState extends State<Editor> {
       child: SafeArea(
         bottom: stows.editorToolbarAlignment.value != AxisDirection.up,
         child: Toolbar(
+          key: _toolbarKey,
           readOnly: coreInfo.readOnly,
-          setTool: (tool) {
-            if (tool is Eraser && currentTool is Eraser) {
-              // setTool(Eraser) is a special case to toggle the eraser on/off
-              tool = _lastNonEraserTool;
-            }
-
-            currentTool = tool;
-
-            if (tool is Highlighter) {
-              Highlighter.currentHighlighter = tool;
-            } else if (tool is Pencil) {
-              Pencil.currentPencil = tool;
-            } else if (tool is Pen) {
-              Pen.currentPen = tool;
-            }
-
-            if (mounted) setState(() {});
-          },
+          setTool: _setTool,
           currentTool: currentTool,
           duplicateSelection: () {
             final select = currentTool as Select;
@@ -1866,6 +2173,9 @@ class EditorState extends State<Editor> {
       },
       currentTool: currentTool,
       currentScale: _transformationController.value.approxScale,
+      stylusHoverPreview: _stylusHoverPreview?.pageIndex == pageIndex
+          ? _stylusHoverPreview
+          : null,
     );
   }
 
@@ -2069,6 +2379,8 @@ class EditorState extends State<Editor> {
     _delayedSaveTimer?.cancel();
     _watchServerTimer?.cancel();
     _lastSeenPointerCountTimer?.cancel();
+    _applePencilInteractionSubscription?.cancel();
+    _applePencilHoverSubscription?.cancel();
 
     _removeKeybindings();
 

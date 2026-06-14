@@ -1,3 +1,4 @@
+# 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
 "@@info":
 - Here are translations that exist in <en> but not in secondary locales.
 - After editing this file, you can run 'dart run slang apply --locale=<locale>' to quickly apply the newly added translations.
@@ -30,16 +31,30 @@ ar:
   settings:
     prefLabels:
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Auto-disable finger drawing
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
       autosave(OUTDATED): Auto-save
       sentry(OUTDATED): Error reporting
     prefDescriptions:
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Turn off finger drawing when a stylus is detected
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
       autosave(OUTDATED): Auto-save after a short delay, or never
       sentry:
         active(OUTDATED): Active
         inactive(OUTDATED): Inactive
         activeUntilRestart(OUTDATED): Active until you restart the app
         inactiveUntilRestart(OUTDATED): Inactive until you restart the app
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
     customDataDir:
       unsupported(OUTDATED): This feature is currently only for developers. Using it will likely result in data loss.
     autosaveDisabled(OUTDATED): Never
@@ -89,6 +104,9 @@ ca:
       disableEraserAfterUse(OUTDATED): Auto-disable the eraser
       hideFingerDrawingToggle(OUTDATED): Hide the finger drawing toggle
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Auto-disable finger drawing
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
       editorPromptRename(OUTDATED): Prompt you to rename new notes
       recentColorsDontSavePresets(OUTDATED): Don't save preset colors in recent colors
       recentColorsLength(OUTDATED): How many recent colors to store
@@ -111,6 +129,9 @@ ca:
         fixedOn(OUTDATED): Finger drawing is fixed as enabled
         fixedOff(OUTDATED): Finger drawing is fixed as disabled
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Turn off finger drawing when a stylus is detected
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
       editorPromptRename(OUTDATED): You can always rename notes later
       printPageIndicators(OUTDATED): Show page indicators in exports
       autosave(OUTDATED): Auto-save after a short delay, or never
@@ -139,6 +160,14 @@ ca:
     - Right
     - Bottom
     - Left
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
     reset:
       title(OUTDATED): Reset this setting?
       button(OUTDATED): Reset
@@ -248,7 +277,41 @@ ca:
       lockSingleFingerPan(OUTDATED): Disable single-finger panning
       unlockAxisAlignedPan(OUTDATED): Unlock panning to horizontal or vertical
 cs:
+  settings:
+    prefLabels:
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
+    prefDescriptions:
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
 de:
+  settings:
+    prefLabels:
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
+    prefDescriptions:
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
 eo:
   home:
     renameNote:
@@ -264,8 +327,22 @@ eo:
   settings:
     prefLabels:
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Auto-disable finger drawing
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
     prefDescriptions:
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Turn off finger drawing when a stylus is detected
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
   editor:
     readOnlyBanner:
       watchingServer(OUTDATED): You are currently watching for updates on the server. Editing is disabled in this mode.
@@ -276,7 +353,14 @@ es:
       deleteNotes(OUTDATED): Delete $n notes
       deleteName(OUTDATED): Delete $f
   settings:
+    prefLabels:
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
     prefDescriptions:
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
       autosave(OUTDATED): Auto-save after a short delay, or never
       simplifiedHomeLayout(OUTDATED): Sets a fixed height for each note preview
       sentry:
@@ -284,6 +368,14 @@ es:
         inactive(OUTDATED): Inactive
         activeUntilRestart(OUTDATED): Active until you restart the app
         inactiveUntilRestart(OUTDATED): Inactive until you restart the app
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
     resyncEverything(OUTDATED): Resync everything
     openDataDir(OUTDATED): Open Saber folder
     customDataDir:
@@ -387,6 +479,9 @@ fa:
   settings:
     prefLabels:
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Auto-disable finger drawing
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
       autosave(OUTDATED): Auto-save
       autoStraightenLines(OUTDATED): Auto straighten lines
       simplifiedHomeLayout(OUTDATED): Simplified home layout
@@ -394,6 +489,9 @@ fa:
       sentry(OUTDATED): Error reporting
     prefDescriptions:
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Turn off finger drawing when a stylus is detected
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
       autosave(OUTDATED): Auto-save after a short delay, or never
       autoStraightenLines(OUTDATED): Straightens long lines without having to use the shape pen
       simplifiedHomeLayout(OUTDATED): Sets a fixed height for each note preview
@@ -402,6 +500,14 @@ fa:
         inactive(OUTDATED): Inactive
         activeUntilRestart(OUTDATED): Active until you restart the app
         inactiveUntilRestart(OUTDATED): Inactive until you restart the app
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
     resyncEverything(OUTDATED): Resync everything
     openDataDir(OUTDATED): Open Saber folder
     customDataDir:
@@ -501,6 +607,9 @@ fr:
   settings:
     prefLabels:
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Auto-disable finger drawing
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
       autosave(OUTDATED): Auto-save
       autoStraightenLines(OUTDATED): Auto straighten lines
       simplifiedHomeLayout(OUTDATED): Simplified home layout
@@ -508,6 +617,9 @@ fr:
       sentry(OUTDATED): Error reporting
     prefDescriptions:
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Turn off finger drawing when a stylus is detected
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
       autosave(OUTDATED): Auto-save after a short delay, or never
       autoStraightenLines(OUTDATED): Straightens long lines without having to use the shape pen
       simplifiedHomeLayout(OUTDATED): Sets a fixed height for each note preview
@@ -516,6 +628,14 @@ fr:
         inactive(OUTDATED): Inactive
         activeUntilRestart(OUTDATED): Active until you restart the app
         inactiveUntilRestart(OUTDATED): Inactive until you restart the app
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
     openDataDir(OUTDATED): Open Saber folder
     customDataDir:
       cancel(OUTDATED): Cancel
@@ -583,6 +703,23 @@ fr:
       watchingServer(OUTDATED): You are currently watching for updates on the server. Editing is disabled in this mode.
       corrupted(OUTDATED): Failed to load note. It may be corrupted or still being downloaded.
 he:
+  settings:
+    prefLabels:
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
+    prefDescriptions:
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
 hu:
   common:
     done(OUTDATED): Done
@@ -666,6 +803,9 @@ hu:
       disableEraserAfterUse(OUTDATED): Auto-disable the eraser
       hideFingerDrawingToggle(OUTDATED): Hide the finger drawing toggle
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Auto-disable finger drawing
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
       recentColorsLength(OUTDATED): How many recent colors to store
       printPageIndicators(OUTDATED): Print page indicators
       autosave(OUTDATED): Auto-save
@@ -682,6 +822,9 @@ hu:
         fixedOn(OUTDATED): Finger drawing is fixed as enabled
         fixedOff(OUTDATED): Finger drawing is fixed as disabled
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Turn off finger drawing when a stylus is detected
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
       printPageIndicators(OUTDATED): Show page indicators in exports
       autosave(OUTDATED): Auto-save after a short delay, or never
       shapeRecognitionDelay(OUTDATED): How often to update the shape preview
@@ -697,6 +840,14 @@ hu:
       auto(OUTDATED): Auto
       phone(OUTDATED): Phone
       tablet(OUTDATED): Tablet
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
     resyncEverything(OUTDATED): Resync everything
     openDataDir(OUTDATED): Open Saber folder
     customDataDir:
@@ -837,18 +988,49 @@ hu:
       lockAxisAlignedPan(OUTDATED): Lock panning to horizontal or vertical
     needsToSaveBeforeExiting(OUTDATED): Saving your changes... You can safely exit the editor when it's done
 it:
+  settings:
+    prefLabels:
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
+    prefDescriptions:
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
 ja:
   settings:
     prefLabels:
       hideFingerDrawingToggle(OUTDATED): Hide the finger drawing toggle
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Auto-disable finger drawing
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
       customDataDir(OUTDATED): Custom Saber folder
     prefDescriptions:
       hideFingerDrawing:
         fixedOn(OUTDATED): Finger drawing is fixed as enabled
         fixedOff(OUTDATED): Finger drawing is fixed as disabled
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Turn off finger drawing when a stylus is detected
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
       simplifiedHomeLayout(OUTDATED): Sets a fixed height for each note preview
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
     autosaveDisabled(OUTDATED): Never
     shapeRecognitionDisabled(OUTDATED): Never
   update:
@@ -857,14 +1039,37 @@ ja:
     menu:
       backgroundImageFit(OUTDATED): Background image fit
 pl:
+  settings:
+    prefLabels:
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
+    prefDescriptions:
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
 pt-BR:
   settings:
     prefLabels:
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
       simplifiedHomeLayout(OUTDATED): Simplified home layout
       customDataDir(OUTDATED): Custom Saber folder
       sentry(OUTDATED): Error reporting
     prefDescriptions:
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Turn off finger drawing when a stylus is detected
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
       autosave(OUTDATED): Auto-save after a short delay, or never
       shapeRecognitionDelay(OUTDATED): How often to update the shape preview
       autoStraightenLines(OUTDATED): Straightens long lines without having to use the shape pen
@@ -876,6 +1081,14 @@ pt-BR:
         inactiveUntilRestart(OUTDATED): Inactive until you restart the app
     layoutSizes:
       tablet(OUTDATED): Tablet
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
     resyncEverything(OUTDATED): Resync everything
     openDataDir(OUTDATED): Open Saber folder
     customDataDir:
@@ -966,6 +1179,23 @@ ru:
         one: Permanently delete the selected note?
         other: Permanently delete the selected notes?
       delete(OUTDATED): Delete
+  settings:
+    prefLabels:
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
+    prefDescriptions:
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
 sl:
   home:
     deleteNoteDialog:
@@ -975,6 +1205,23 @@ sl:
         one: Permanently delete the selected note?
         other: Permanently delete the selected notes?
       delete(OUTDATED): Delete
+  settings:
+    prefLabels:
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
+    prefDescriptions:
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
 th:
   home:
     deleteNoteDialog:
@@ -984,6 +1231,23 @@ th:
         one: Permanently delete the selected note?
         other: Permanently delete the selected notes?
       delete(OUTDATED): Delete
+  settings:
+    prefLabels:
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
+    prefDescriptions:
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
   editor:
     readOnlyBanner:
       watchingServer(OUTDATED): You are currently watching for updates on the server. Editing is disabled in this mode.
@@ -1017,16 +1281,30 @@ tr:
   settings:
     prefLabels:
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Auto-disable finger drawing
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
       autosave(OUTDATED): Auto-save
       sentry(OUTDATED): Error reporting
     prefDescriptions:
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Turn off finger drawing when a stylus is detected
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
       autosave(OUTDATED): Auto-save after a short delay, or never
       sentry:
         active(OUTDATED): Active
         inactive(OUTDATED): Inactive
         activeUntilRestart(OUTDATED): Active until you restart the app
         inactiveUntilRestart(OUTDATED): Inactive until you restart the app
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
     customDataDir:
       unsupported(OUTDATED): This feature is currently only for developers. Using it will likely result in data loss.
     autosaveDisabled(OUTDATED): Never
@@ -1145,6 +1423,9 @@ uk:
       disableEraserAfterUse(OUTDATED): Auto-disable the eraser
       hideFingerDrawingToggle(OUTDATED): Hide the finger drawing toggle
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Auto-disable finger drawing
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
       editorPromptRename(OUTDATED): Prompt you to rename new notes
       recentColorsDontSavePresets(OUTDATED): Don't save preset colors in recent colors
       recentColorsLength(OUTDATED): How many recent colors to store
@@ -1167,6 +1448,9 @@ uk:
         fixedOn(OUTDATED): Finger drawing is fixed as enabled
         fixedOff(OUTDATED): Finger drawing is fixed as disabled
       autoDisableFingerDrawingWhenStylusDetected(OUTDATED): Turn off finger drawing when a stylus is detected
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
       editorPromptRename(OUTDATED): You can always rename notes later
       printPageIndicators(OUTDATED): Show page indicators in exports
       autosave(OUTDATED): Auto-save after a short delay, or never
@@ -1195,6 +1479,14 @@ uk:
     - Right
     - Bottom
     - Left
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
     reset:
       title(OUTDATED): Reset this setting?
       button(OUTDATED): Reset
@@ -1383,5 +1675,56 @@ vi:
         one: Permanently delete the selected note?
         other: Permanently delete the selected notes?
       delete(OUTDATED): Delete
+  settings:
+    prefLabels:
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
+    prefDescriptions:
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
 zh-Hans-CN:
+  settings:
+    prefLabels:
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
+    prefDescriptions:
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options
 zh-Hant-TW:
+  settings:
+    prefLabels:
+      applePencilDoubleTapAction: Apple Pencil double-tap
+      applePencilSqueezeAction: Apple Pencil squeeze
+      applePencilTipPreview: Apple Pencil tip preview
+    prefDescriptions:
+      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
+    applePencilActions:
+      system: System
+      disabled: Disabled
+      toggleEraser: Toggle eraser
+      switchPreviousTool: Previous tool
+      showColorPalette: Show colors
+      showInkAttributes: Show ink attributes
+      showToolPalette: Show tool options

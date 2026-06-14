@@ -1,3 +1,6 @@
+/// 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+library;
+
 import 'dart:async';
 import 'dart:io';
 
@@ -7,6 +10,7 @@ import 'package:logging/logging.dart';
 import 'package:perfect_freehand/perfect_freehand.dart';
 import 'package:saber/components/navbar/responsive_navbar.dart';
 import 'package:saber/components/settings/nextcloud_profile.dart';
+import 'package:saber/data/apple_pencil/apple_pencil_interaction.dart';
 import 'package:saber/data/codecs/base64_codec.dart';
 import 'package:saber/data/codecs/quota_codec.dart';
 import 'package:saber/data/flavor_config.dart';
@@ -210,6 +214,27 @@ class Stows {
   final autoDisableFingerDrawingWhenStylusDetected = PlainStow(
     'autoDisableFingerDrawingWhenStylusDetected',
     true,
+    volatile: !_isOnMainIsolate,
+  );
+  final applePencilTipPreview = PlainStow(
+    'applePencilTipPreview',
+    true,
+    volatile: !_isOnMainIsolate,
+  );
+
+  /// The action Saber should take when Apple Pencil double-tap fires.
+  final applePencilDoubleTapAction = PlainStow(
+    'applePencilDoubleTapAction',
+    ApplePencilAction.system,
+    codec: ApplePencilAction.codec,
+    volatile: !_isOnMainIsolate,
+  );
+
+  /// The action Saber should take when Apple Pencil Pro squeeze fires.
+  final applePencilSqueezeAction = PlainStow(
+    'applePencilSqueezeAction',
+    ApplePencilAction.system,
+    codec: ApplePencilAction.codec,
     volatile: !_isOnMainIsolate,
   );
 

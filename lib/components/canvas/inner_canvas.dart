@@ -1,3 +1,6 @@
+/// 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+library;
+
 import 'package:defer_pointer/defer_pointer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -10,6 +13,7 @@ import 'package:saber/components/canvas/image/editor_image.dart';
 import 'package:saber/data/editor/editor_core_info.dart';
 import 'package:saber/data/prefs.dart';
 import 'package:saber/data/tools/select.dart';
+import 'package:saber/data/tools/stylus_hover_preview.dart';
 import 'package:saber/i18n/strings.g.dart';
 import 'package:sbn/canvas_background_pattern.dart';
 import 'package:sbn/quill_styles.dart';
@@ -31,6 +35,7 @@ class InnerCanvas extends StatefulWidget {
     this.onRenderObjectChange,
     required this.currentToolIsSelect,
     required this.currentScale,
+    this.stylusHoverPreview,
   });
 
   final int pageIndex;
@@ -49,6 +54,7 @@ class InnerCanvas extends StatefulWidget {
   final bool currentToolIsSelect;
 
   final double currentScale;
+  final StylusHoverPreview? stylusHoverPreview;
 
   static const defaultBackgroundColor = Color(0xFFFCFCFC);
 
@@ -138,6 +144,7 @@ class _InnerCanvasState extends State<InnerCanvas> {
           pageIndex: widget.pageIndex,
           totalPages: widget.coreInfo.pages.length,
           currentScale: widget.currentScale,
+          stylusHoverPreview: widget.stylusHoverPreview,
           defaultTextStyle: theme.textTheme.bodyMedium!,
         ),
         isComplex: true,

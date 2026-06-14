@@ -1,3 +1,5 @@
+# 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+
 common:
   done: Done
   continueBtn: Continue
@@ -108,6 +110,9 @@ settings:
     disableEraserAfterUse: Auto-disable the eraser
     hideFingerDrawingToggle: Hide the finger drawing toggle
     autoDisableFingerDrawingWhenStylusDetected: Auto-disable finger drawing
+    applePencilDoubleTapAction: Apple Pencil double-tap
+    applePencilSqueezeAction: Apple Pencil squeeze
+    applePencilTipPreview: Apple Pencil tip preview
     editorPromptRename: Prompt you to rename new notes
     recentColorsDontSavePresets: Don't save preset colors in recent colors
     recentColorsLength: How many recent colors to store
@@ -130,6 +135,9 @@ settings:
       fixedOn: Finger drawing is fixed as enabled
       fixedOff: Finger drawing is fixed as disabled
     autoDisableFingerDrawingWhenStylusDetected: Turn off finger drawing when a stylus is detected
+    applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
+    applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
+    applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
     editorPromptRename: You can always rename notes later
     printPageIndicators: Show page indicators in exports
     autosave: Auto-save after a short delay, or never
@@ -158,6 +166,14 @@ settings:
   - Right
   - Bottom
   - Left
+  applePencilActions:
+    system: System
+    disabled: Disabled
+    toggleEraser: Toggle eraser
+    switchPreviousTool: Previous tool
+    showColorPalette: Show colors
+    showInkAttributes: Show ink attributes
+    showToolPalette: Show tool options
   reset:
     title: Reset this setting?
     button: Reset

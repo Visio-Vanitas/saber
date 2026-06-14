@@ -1,3 +1,8 @@
+/// 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+library;
+
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:perfect_freehand/perfect_freehand.dart';
@@ -7,6 +12,7 @@ import 'package:saber/data/prefs.dart';
 import 'package:saber/data/tools/_tool.dart';
 import 'package:saber/data/tools/highlighter.dart';
 import 'package:saber/data/tools/pencil.dart';
+import 'package:saber/data/tools/stylus_sample.dart';
 import 'package:saber/i18n/strings.g.dart';
 import 'package:sbn/tool_id.dart';
 
@@ -79,7 +85,7 @@ class Pen extends Tool {
     Offset position,
     EditorPage page,
     int pageIndex,
-    double? pressure,
+    StylusSample? stylusSample,
   ) {
     currentStroke = Stroke(
       color: color,
@@ -89,11 +95,11 @@ class Pen extends Tool {
       page: page,
       toolId: toolId,
     );
-    onDragUpdate(position, pressure);
+    onDragUpdate(position, stylusSample);
   }
 
-  void onDragUpdate(Offset position, double? pressure) {
-    currentStroke?.addPoint(position, pressure);
+  void onDragUpdate(Offset position, StylusSample? stylusSample) {
+    currentStroke?.addPoint(position, _effectivePressure(stylusSample));
   }
 
   Stroke? onDragEnd() {
@@ -124,4 +130,18 @@ class Pen extends Tool {
     start: StrokeEndOptions.start(taperEnabled: true, customTaper: 1),
     end: StrokeEndOptions.end(taperEnabled: true, customTaper: 1),
   );
+
+  double? _effectivePressure(StylusSample? stylusSample) {
+    if (stylusSample == null) return null;
+    if (toolId != ToolId.pencil) return stylusSample.pressure;
+
+    final pressure = stylusSample.pressure;
+    final tilt = stylusSample.tilt;
+    if (tilt == null) return pressure;
+    if (pressure == null && tilt == 0) return null;
+
+    final basePressure = pressure ?? 0.5;
+    final normalizedTilt = (tilt.abs() / (math.pi / 2)).clamp(0.0, 1.0);
+    return (basePressure + normalizedTilt * 0.25).clamp(0.0, 1.0).toDouble();
+  }
 }

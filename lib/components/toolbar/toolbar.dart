@@ -1,3 +1,6 @@
+/// 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+library;
+
 import 'dart:io';
 
 import 'package:collapsible/collapsible.dart';
@@ -82,16 +85,73 @@ class Toolbar extends StatefulWidget {
   final Future Function(BuildContext)? exportAsPng;
 
   @override
-  State<Toolbar> createState() => _ToolbarState();
+  State<Toolbar> createState() => ToolbarState();
 
   static const _buttonPaddingHorizontal = EdgeInsets.symmetric(horizontal: 6);
   static const _buttonPaddingVertical = EdgeInsets.symmetric(vertical: 6);
 }
 
-class _ToolbarState extends State<Toolbar> {
-  ValueNotifier<bool> showExportOptions = ValueNotifier(false);
-  ValueNotifier<bool> showColorOptions = ValueNotifier(false);
-  ValueNotifier<ToolOptions> toolOptionsType = ValueNotifier(ToolOptions.hide);
+/// State for the editor toolbar.
+class ToolbarState extends State<Toolbar> {
+  /// Whether export options are currently expanded.
+  final showExportOptions = ValueNotifier(false);
+
+  /// Whether color options are currently expanded.
+  final showColorOptions = ValueNotifier(false);
+
+  /// The currently expanded tool options panel.
+  final toolOptionsType = ValueNotifier(ToolOptions.hide);
+
+  /// Whether the color palette is currently expanded.
+  @visibleForTesting
+  bool get isColorOptionsOpen => showColorOptions.value;
+
+  /// The currently expanded tool options panel.
+  @visibleForTesting
+  ToolOptions get currentToolOptions => toolOptionsType.value;
+
+  /// Opens the color palette.
+  void openColorOptions() {
+    showExportOptions.value = false;
+    toolOptionsType.value = .hide;
+    showColorOptions.value = true;
+  }
+
+  /// Opens the options panel for the current tool, when the tool has one.
+  void openCurrentToolOptions() {
+    final toolOptions = _currentToolOptions();
+    if (toolOptions == null) return;
+
+    showExportOptions.value = false;
+    showColorOptions.value = false;
+    toolOptionsType.value = toolOptions;
+  }
+
+  /// Toggles the options panel for the current tool, when the tool has one.
+  void toggleCurrentToolOptions() {
+    final toolOptions = _currentToolOptions();
+    if (toolOptions == null) return;
+
+    if (toolOptionsType.value == toolOptions) {
+      toolOptionsType.value = .hide;
+      return;
+    }
+
+    openCurrentToolOptions();
+  }
+
+  ToolOptions? _currentToolOptions() {
+    return switch (widget.currentTool) {
+      final Pen pen when pen == Pen.currentPen => ToolOptions.pen,
+      final Pencil pencil when pencil == Pencil.currentPencil =>
+        ToolOptions.pencil,
+      final Highlighter highlighter
+          when highlighter == Highlighter.currentHighlighter =>
+        ToolOptions.highlighter,
+      final Select select when select.doneSelecting => ToolOptions.select,
+      _ => null,
+    };
+  }
 
   @override
   void initState() {
@@ -157,7 +217,12 @@ class _ToolbarState extends State<Toolbar> {
   }
 
   void toggleColorOptions() {
-    showColorOptions.value = !showColorOptions.value;
+    if (showColorOptions.value) {
+      showColorOptions.value = false;
+      return;
+    }
+
+    openColorOptions();
   }
 
   void toggleExportBar() {
@@ -580,4 +645,20 @@ class _ToolbarState extends State<Toolbar> {
   }
 }
 
-enum ToolOptions { hide, pen, highlighter, pencil, select }
+/// Expandable toolbar option panels.
+enum ToolOptions {
+  /// No tool options are expanded.
+  hide,
+
+  /// Fountain or ballpoint pen options are expanded.
+  pen,
+
+  /// Highlighter options are expanded.
+  highlighter,
+
+  /// Pencil options are expanded.
+  pencil,
+
+  /// Selection options are expanded.
+  select,
+}

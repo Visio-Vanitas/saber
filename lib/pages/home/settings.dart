@@ -1,3 +1,6 @@
+/// 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+library;
+
 import 'dart:io';
 
 import 'package:collapsible/collapsible.dart';
@@ -23,6 +26,7 @@ import 'package:saber/components/theming/adaptive_alert_dialog.dart';
 import 'package:saber/components/theming/adaptive_toggle_buttons.dart';
 import 'package:saber/components/theming/saber_theme.dart';
 import 'package:saber/components/theming/uni_icon.dart';
+import 'package:saber/data/apple_pencil/apple_pencil_interaction.dart';
 import 'package:saber/data/file_manager/file_manager.dart';
 import 'package:saber/data/flavor_config.dart';
 import 'package:saber/data/is_this_a_test.dart';
@@ -147,6 +151,36 @@ class _SettingsPageState extends State<SettingsPage> {
     final cupertino = platform.isCupertino;
 
     final requiresManualUpdates = FlavorConfig.appStore.isEmpty;
+    final applePencilActionOptions = [
+      ToggleButtonsOption(
+        ApplePencilAction.system,
+        Text(t.settings.applePencilActions.system),
+      ),
+      ToggleButtonsOption(
+        ApplePencilAction.disabled,
+        Text(t.settings.applePencilActions.disabled),
+      ),
+      ToggleButtonsOption(
+        ApplePencilAction.toggleEraser,
+        Text(t.settings.applePencilActions.toggleEraser),
+      ),
+      ToggleButtonsOption(
+        ApplePencilAction.switchPreviousTool,
+        Text(t.settings.applePencilActions.switchPreviousTool),
+      ),
+      ToggleButtonsOption(
+        ApplePencilAction.showColorPalette,
+        Text(t.settings.applePencilActions.showColorPalette),
+      ),
+      ToggleButtonsOption(
+        ApplePencilAction.showInkAttributes,
+        Text(t.settings.applePencilActions.showInkAttributes),
+      ),
+      ToggleButtonsOption(
+        ApplePencilAction.showToolPalette,
+        Text(t.settings.applePencilActions.showToolPalette),
+      ),
+    ];
 
     final materialIcon = switch (defaultTargetPlatform) {
       .windows => FontAwesomeIcons.windows,
@@ -421,6 +455,30 @@ class _SettingsPageState extends State<SettingsPage> {
                     );
                   },
                 ),
+                if (Platform.isIOS) ...[
+                  SettingsDropdown<ApplePencilAction>(
+                    title: t.settings.prefLabels.applePencilDoubleTapAction,
+                    subtitle:
+                        t.settings.prefDescriptions.applePencilDoubleTapAction,
+                    icon: CupertinoIcons.pencil,
+                    pref: stows.applePencilDoubleTapAction,
+                    options: applePencilActionOptions,
+                  ),
+                  SettingsDropdown<ApplePencilAction>(
+                    title: t.settings.prefLabels.applePencilSqueezeAction,
+                    subtitle:
+                        t.settings.prefDescriptions.applePencilSqueezeAction,
+                    icon: Icons.gesture,
+                    pref: stows.applePencilSqueezeAction,
+                    options: applePencilActionOptions,
+                  ),
+                  SettingsSwitch(
+                    title: t.settings.prefLabels.applePencilTipPreview,
+                    subtitle: t.settings.prefDescriptions.applePencilTipPreview,
+                    icon: CupertinoIcons.pencil_outline,
+                    pref: stows.applePencilTipPreview,
+                  ),
+                ],
 
                 SettingsSubtitle(subtitle: t.settings.prefCategories.editor),
                 SettingsSelection(

@@ -1,3 +1,6 @@
+/// 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+library;
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -9,6 +12,7 @@ import 'package:saber/components/canvas/_rectangle_stroke.dart';
 import 'package:saber/components/canvas/_stroke.dart';
 import 'package:saber/data/prefs.dart';
 import 'package:saber/data/tools/pen.dart';
+import 'package:saber/data/tools/stylus_sample.dart';
 import 'package:saber/i18n/strings.g.dart';
 
 class ShapePen extends Pen {
@@ -47,8 +51,8 @@ class ShapePen extends Pen {
   }
 
   @override
-  void onDragUpdate(Offset position, double? pressure) {
-    super.onDragUpdate(position, pressure);
+  void onDragUpdate(Offset position, StylusSample? stylusSample) {
+    super.onDragUpdate(position, stylusSample);
 
     final isPreviewEnabled = debounceDuration < const Duration(hours: 1);
     final isTimerActive = _detectShapeDebouncer?.isActive ?? false;

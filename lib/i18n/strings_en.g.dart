@@ -1,4 +1,6 @@
 ///
+/// 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+///
 /// Generated file. Do not edit.
 ///
 // coverage:ignore-file
@@ -140,6 +142,7 @@ class Translations$settings$en {
 		'Bottom',
 		'Left',
 	];
+	late final Translations$settings$applePencilActions$en applePencilActions = Translations$settings$applePencilActions$en.internal(_root);
 	late final Translations$settings$reset$en reset = Translations$settings$reset$en.internal(_root);
 
 	/// en: 'Resync everything'
@@ -655,6 +658,15 @@ class Translations$settings$prefLabels$en {
 	/// en: 'Auto-disable finger drawing'
 	String get autoDisableFingerDrawingWhenStylusDetected => 'Auto-disable finger drawing';
 
+	/// en: 'Apple Pencil double-tap'
+	String get applePencilDoubleTapAction => 'Apple Pencil double-tap';
+
+	/// en: 'Apple Pencil squeeze'
+	String get applePencilSqueezeAction => 'Apple Pencil squeeze';
+
+	/// en: 'Apple Pencil tip preview'
+	String get applePencilTipPreview => 'Apple Pencil tip preview';
+
 	/// en: 'Prompt you to rename new notes'
 	String get editorPromptRename => 'Prompt you to rename new notes';
 
@@ -716,6 +728,15 @@ class Translations$settings$prefDescriptions$en {
 
 	/// en: 'Turn off finger drawing when a stylus is detected'
 	String get autoDisableFingerDrawingWhenStylusDetected => 'Turn off finger drawing when a stylus is detected';
+
+	/// en: 'Follow or override the iPadOS Apple Pencil double-tap setting'
+	String get applePencilDoubleTapAction => 'Follow or override the iPadOS Apple Pencil double-tap setting';
+
+	/// en: 'Follow or override the iPadOS Apple Pencil Pro squeeze setting'
+	String get applePencilSqueezeAction => 'Follow or override the iPadOS Apple Pencil Pro squeeze setting';
+
+	/// en: 'Show the current tool footprint while Apple Pencil is hovering'
+	String get applePencilTipPreview => 'Show the current tool footprint while Apple Pencil is hovering';
 
 	/// en: 'You can always rename notes later'
 	String get editorPromptRename => 'You can always rename notes later';
@@ -787,6 +808,36 @@ class Translations$settings$accentColorPicker$en {
 
 	/// en: 'Pick a color'
 	String get pickAColor => 'Pick a color';
+}
+
+// Path: settings.applePencilActions
+class Translations$settings$applePencilActions$en {
+	Translations$settings$applePencilActions$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'System'
+	String get system => 'System';
+
+	/// en: 'Disabled'
+	String get disabled => 'Disabled';
+
+	/// en: 'Toggle eraser'
+	String get toggleEraser => 'Toggle eraser';
+
+	/// en: 'Previous tool'
+	String get switchPreviousTool => 'Previous tool';
+
+	/// en: 'Show colors'
+	String get showColorPalette => 'Show colors';
+
+	/// en: 'Show ink attributes'
+	String get showInkAttributes => 'Show ink attributes';
+
+	/// en: 'Show tool options'
+	String get showToolPalette => 'Show tool options';
 }
 
 // Path: settings.reset

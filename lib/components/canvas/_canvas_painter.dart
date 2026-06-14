@@ -1,3 +1,6 @@
+/// 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+library;
+
 import 'dart:math';
 import 'dart:ui' as ui;
 
@@ -14,6 +17,7 @@ import 'package:saber/data/tools/highlighter.dart';
 import 'package:saber/data/tools/laser_pointer.dart';
 import 'package:saber/data/tools/select.dart';
 import 'package:saber/data/tools/shape_pen.dart';
+import 'package:saber/data/tools/stylus_hover_preview.dart';
 
 class CanvasPainter extends CustomPainter {
   const CanvasPainter({
@@ -29,6 +33,7 @@ class CanvasPainter extends CustomPainter {
     required this.pageIndex,
     required this.totalPages,
     required this.currentScale,
+    required this.stylusHoverPreview,
     required this.defaultTextStyle,
   });
 
@@ -43,6 +48,7 @@ class CanvasPainter extends CustomPainter {
   final int pageIndex;
   final int totalPages;
   final double currentScale;
+  final StylusHoverPreview? stylusHoverPreview;
   final TextStyle defaultTextStyle;
 
   @override
@@ -55,6 +61,7 @@ class CanvasPainter extends CustomPainter {
     _drawCurrentStroke(canvas);
     _drawDetectedShape(canvas);
     _drawSelection(canvas);
+    _drawStylusHoverPreview(canvas);
     _drawPageIndicator(canvas, size);
   }
 
@@ -74,6 +81,7 @@ class CanvasPainter extends CustomPainter {
         showPageIndicator != oldDelegate.showPageIndicator ||
         pageIndex != oldDelegate.pageIndex ||
         totalPages != oldDelegate.totalPages ||
+        stylusHoverPreview != oldDelegate.stylusHoverPreview ||
         currentScale != oldDelegate.currentScale;
   }
 
@@ -248,6 +256,48 @@ class CanvasPainter extends CustomPainter {
         ..strokeWidth = 3
         ..style = .stroke,
     );
+  }
+
+  void _drawStylusHoverPreview(Canvas canvas) {
+    final preview = stylusHoverPreview;
+    if (preview == null) return;
+
+    final color = preview.color.withInversion(invert);
+    final opacity = preview.opacity.clamp(0.0, 1.0);
+    final scale = max(currentScale, 0.01);
+    final strokeWidth = max(1.0, 1.5 / scale);
+    final visibleRadius = max(preview.radius, 6.0 / scale);
+    final outlineColor = Colors.black
+        .withInversion(invert)
+        .withValues(alpha: max(0.2, opacity * 0.55));
+
+    switch (preview.kind) {
+      case StylusHoverPreviewKind.drawing:
+        canvas.drawCircle(
+          preview.position,
+          preview.radius,
+          Paint()
+            ..color = color.withValues(alpha: color.a * opacity)
+            ..style = PaintingStyle.fill,
+        );
+        canvas.drawCircle(
+          preview.position,
+          visibleRadius,
+          Paint()
+            ..color = outlineColor
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = strokeWidth,
+        );
+      case StylusHoverPreviewKind.eraser:
+        canvas.drawCircle(
+          preview.position,
+          visibleRadius,
+          Paint()
+            ..color = outlineColor
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = strokeWidth,
+        );
+    }
   }
 
   static const double _pageIndicatorFontSize = 20;

@@ -1,3 +1,6 @@
+/// 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+library;
+
 import 'dart:async';
 import 'dart:collection';
 import 'dart:math';
@@ -13,6 +16,7 @@ import 'package:saber/data/editor/page.dart';
 import 'package:saber/data/extensions/change_notifier_extensions.dart';
 import 'package:saber/data/extensions/matrix4_extensions.dart';
 import 'package:saber/data/prefs.dart';
+import 'package:saber/data/tools/stylus_sample.dart';
 import 'package:saber/pages/editor/editor.dart';
 import 'package:vector_math/vector_math_64.dart';
 
@@ -28,6 +32,8 @@ class CanvasGestureDetector extends StatefulWidget {
     required this.updatePointerData,
     required this.onHovering,
     required this.onHoveringEnd,
+    required this.onStylusHover,
+    required this.onStylusHoverEnd,
     required this.onStylusButtonChanged,
     required this.undo,
     required this.redo,
@@ -48,12 +54,14 @@ class CanvasGestureDetector extends StatefulWidget {
   final ValueChanged<ScaleUpdateDetails> onDrawUpdate;
   final ValueChanged<ScaleEndDetails> onDrawEnd;
 
-  /// Called when the pressure of the stylus changes.
-  /// The [pressure] value is normalized into a range of 0 to 1.
-  final void Function(PointerDeviceKind kind, double? pressure)
-  updatePointerData;
+  /// Called when pointer or stylus data changes.
+  ///
+  /// Stylus pressure is normalized into a range of 0 to 1 when available.
+  final ValueChanged<StylusSample> updatePointerData;
   final VoidCallback onHovering;
   final VoidCallback onHoveringEnd;
+  final ValueChanged<PointerEvent> onStylusHover;
+  final VoidCallback onStylusHoverEnd;
   final ValueChanged<bool> onStylusButtonChanged;
 
   final VoidCallback undo;
@@ -144,6 +152,8 @@ class CanvasGestureDetector extends StatefulWidget {
 }
 
 class CanvasGestureDetectorState extends State<CanvasGestureDetector> {
+  static const _stylusHoverEndDelay = Duration(milliseconds: 900);
+
   late var containerBounds = const BoxConstraints();
 
   /// If zooming is locked, this is the zoom level.
@@ -422,26 +432,14 @@ class CanvasGestureDetectorState extends State<CanvasGestureDetector> {
     final isStylus =
         event.kind == PointerDeviceKind.stylus ||
         event.kind == PointerDeviceKind.invertedStylus;
+    if (event is PointerDownEvent) {
+      _clearStylusHover();
+    }
     if (isStylus && event is PointerDownEvent) {
       _detectStylusButton(event);
     }
 
-    final double? pressure;
-    if (isStylus) {
-      if (event.pressureMin != event.pressureMax) {
-        pressure = _inverseLerp(
-          event.pressure,
-          min: event.pressureMin,
-          max: event.pressureMax,
-        );
-      } else {
-        // Detected as stylus, but no pressure values
-        pressure = null;
-      }
-    } else {
-      pressure = null;
-    }
-    widget.updatePointerData(event.kind, pressure);
+    widget.updatePointerData(StylusSample.fromPointerEvent(event));
 
     if (isStylus &&
         stows.autoDisableFingerDrawingWhenStylusDetected.value &&
@@ -452,19 +450,42 @@ class CanvasGestureDetectorState extends State<CanvasGestureDetector> {
   }
 
   var stylusButtonWasPressed = false;
+  Timer? _stylusHoverEndTimer;
 
   void _listenerPointerHoverEvent(PointerEvent event) {
-    if (event.kind != .stylus && event.kind != .invertedStylus) return;
-
-    // Apparently flutter synthesizes a hover event on pointer down,
-    // so these are used to detect when hovering ends
-    if (event.synthesized) {
-      widget.onHoveringEnd();
-    } else {
-      widget.onHovering();
+    if (event.kind != .stylus && event.kind != .invertedStylus) {
+      return;
     }
 
     _detectStylusButton(event);
+
+    if (event.synthesized) {
+      widget.onHoveringEnd();
+      _scheduleStylusHoverEnd();
+      return;
+    }
+
+    widget.onHovering();
+    widget.onStylusHover(event);
+    _scheduleStylusHoverEnd();
+  }
+
+  void _listenerPointerExitEvent(PointerExitEvent event) {
+    if (event.kind != .stylus && event.kind != .invertedStylus) return;
+
+    widget.onHoveringEnd();
+    _clearStylusHover();
+  }
+
+  void _scheduleStylusHoverEnd() {
+    _stylusHoverEndTimer?.cancel();
+    _stylusHoverEndTimer = Timer(_stylusHoverEndDelay, _clearStylusHover);
+  }
+
+  void _clearStylusHover() {
+    _stylusHoverEndTimer?.cancel();
+    _stylusHoverEndTimer = null;
+    widget.onStylusHoverEnd();
   }
 
   void _detectStylusButton(PointerEvent event) {
@@ -477,11 +498,21 @@ class CanvasGestureDetectorState extends State<CanvasGestureDetector> {
   }
 
   void _listenerPointerUpEvent(PointerEvent event) {
-    widget.updatePointerData(event.kind, null);
+    widget.updatePointerData(StylusSample(kind: event.kind));
+    _clearStylusHover();
     if (stylusButtonWasPressed) {
       stylusButtonWasPressed = false;
       widget.onStylusButtonChanged(false);
     }
+  }
+
+  void _listenerPointerCancelEvent(PointerEvent event) {
+    widget.updatePointerData(StylusSample(kind: event.kind));
+    _clearStylusHover();
+    if (!stylusButtonWasPressed) return;
+
+    stylusButtonWasPressed = false;
+    widget.onStylusButtonChanged(false);
   }
 
   @override
@@ -490,51 +521,62 @@ class CanvasGestureDetectorState extends State<CanvasGestureDetector> {
 
     return Stack(
       children: [
-        Listener(
-          onPointerDown: _listenerPointerEvent,
-          onPointerMove: _listenerPointerEvent,
-          onPointerUp: _listenerPointerUpEvent,
-          onPointerHover: _listenerPointerHoverEvent,
-          child: GestureDetector(
-            child: LayoutBuilder(
-              builder: (BuildContext context, BoxConstraints containerBounds) {
-                this.containerBounds = containerBounds;
+        MouseRegion(
+          onExit: _listenerPointerExitEvent,
+          child: Listener(
+            onPointerDown: _listenerPointerEvent,
+            onPointerMove: _listenerPointerEvent,
+            onPointerUp: _listenerPointerUpEvent,
+            onPointerCancel: _listenerPointerCancelEvent,
+            onPointerHover: _listenerPointerHoverEvent,
+            child: GestureDetector(
+              child: LayoutBuilder(
+                builder:
+                    (BuildContext context, BoxConstraints containerBounds) {
+                      this.containerBounds = containerBounds;
 
-                return InteractiveCanvasViewer.builder(
-                  minScale: zoomLockedValue ?? CanvasGestureDetector.kMinScale,
-                  maxScale: zoomLockedValue ?? CanvasGestureDetector.kMaxScale,
-                  panEnabled: !singleFingerPanLock,
-                  panAxis: axisAlignedPanLock ? PanAxis.aligned : PanAxis.free,
+                      return InteractiveCanvasViewer.builder(
+                        minScale:
+                            zoomLockedValue ?? CanvasGestureDetector.kMinScale,
+                        maxScale:
+                            zoomLockedValue ?? CanvasGestureDetector.kMaxScale,
+                        panEnabled: !singleFingerPanLock,
+                        panAxis: axisAlignedPanLock
+                            ? PanAxis.aligned
+                            : PanAxis.free,
 
-                  interactionEndFrictionCoefficient:
-                      InteractiveCanvasViewer.kDrag * 100,
+                        interactionEndFrictionCoefficient:
+                            InteractiveCanvasViewer.kDrag * 100,
 
-                  // we need a non-zero boundary margin so we can zoom out
-                  // past the size of the page (for minScale < 1)
-                  boundaryMargin: .symmetric(
-                    vertical: 0,
-                    horizontal: screenSize.width * 2,
-                  ),
+                        // we need a non-zero boundary margin so we can zoom out
+                        // past the size of the page (for minScale < 1)
+                        boundaryMargin: .symmetric(
+                          vertical: 0,
+                          horizontal: screenSize.width * 2,
+                        ),
 
-                  transformationController: widget._transformationController,
+                        transformationController:
+                            widget._transformationController,
 
-                  isDrawGesture: widget.isDrawGesture,
-                  onInteractionEnd: widget.onInteractionEnd,
-                  onDrawStart: widget.onDrawStart,
-                  onDrawUpdate: widget.onDrawUpdate,
-                  onDrawEnd: widget.onDrawEnd,
+                        isDrawGesture: widget.isDrawGesture,
+                        onInteractionEnd: widget.onInteractionEnd,
+                        onDrawStart: widget.onDrawStart,
+                        onDrawUpdate: widget.onDrawUpdate,
+                        onDrawEnd: widget.onDrawEnd,
 
-                  builder: (BuildContext context, Quad viewport) {
-                    return _PagesBuilder(
-                      pages: widget.pages,
-                      pageBuilder: widget.pageBuilder,
-                      placeholderPageBuilder: widget.placeholderPageBuilder,
-                      boundingBox: _axisAlignedBoundingBox(viewport),
-                      containerWidth: containerBounds.maxWidth,
-                    );
-                  },
-                );
-              },
+                        builder: (BuildContext context, Quad viewport) {
+                          return _PagesBuilder(
+                            pages: widget.pages,
+                            pageBuilder: widget.pageBuilder,
+                            placeholderPageBuilder:
+                                widget.placeholderPageBuilder,
+                            boundingBox: _axisAlignedBoundingBox(viewport),
+                            containerWidth: containerBounds.maxWidth,
+                          );
+                        },
+                      );
+                    },
+              ),
             ),
           ),
         ),
@@ -573,6 +615,7 @@ class CanvasGestureDetectorState extends State<CanvasGestureDetector> {
     );
     widget._transformationController.removeListener(onTransformChanged);
     widget._transformationController.dispose();
+    _stylusHoverEndTimer?.cancel();
     _removeKeybindings();
     super.dispose();
   }
@@ -695,13 +738,4 @@ base class CanvasTransformCacheItem
   final Matrix4 transform;
 
   CanvasTransformCacheItem(this.filePath, this.transform);
-}
-
-double _inverseLerp(num value, {required num min, required num max}) {
-  assert(max >= min, 'Max ($max) must be >= min ($min)');
-  assert(
-    value >= min && value <= max,
-    'Value ($value) must be between $min and $max',
-  );
-  return (value - min) / (max - min);
 }

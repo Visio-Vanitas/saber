@@ -1,3 +1,6 @@
+/// 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+library;
+
 import 'package:flutter/material.dart';
 import 'package:one_dollar_unistroke_recognizer/one_dollar_unistroke_recognizer.dart';
 import 'package:onyxsdk_pen/onyxsdk_pen.dart';
@@ -9,6 +12,7 @@ import 'package:saber/data/editor/page.dart';
 import 'package:saber/data/tools/_tool.dart';
 import 'package:saber/data/tools/pen.dart';
 import 'package:saber/data/tools/select.dart';
+import 'package:saber/data/tools/stylus_hover_preview.dart';
 import 'package:sbn/tool_id.dart';
 
 class Canvas extends StatelessWidget {
@@ -25,6 +29,7 @@ class Canvas extends StatelessWidget {
     required this.setAsBackground,
     required this.currentTool,
     required this.currentScale,
+    this.stylusHoverPreview,
     this.placeholder = false,
   });
 
@@ -42,6 +47,7 @@ class Canvas extends StatelessWidget {
 
   final Tool currentTool;
   final double currentScale;
+  final StylusHoverPreview? stylusHoverPreview;
   final bool placeholder;
 
   OnyxStrokeStyle _getOnyxTool(Tool currentTool) {
@@ -128,6 +134,7 @@ class Canvas extends StatelessWidget {
                       setAsBackground: setAsBackground,
                       currentToolIsSelect: currentTool.toolId == ToolId.select,
                       currentScale: currentScale,
+                      stylusHoverPreview: stylusHoverPreview,
                     ),
                   ),
                 )
