@@ -1693,38 +1693,4 @@ vi:
       showInkAttributes: Show ink attributes
       showToolPalette: Show tool options
 zh-Hans-CN:
-  settings:
-    prefLabels:
-      applePencilDoubleTapAction: Apple Pencil double-tap
-      applePencilSqueezeAction: Apple Pencil squeeze
-      applePencilTipPreview: Apple Pencil tip preview
-    prefDescriptions:
-      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
-      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
-      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
-    applePencilActions:
-      system: System
-      disabled: Disabled
-      toggleEraser: Toggle eraser
-      switchPreviousTool: Previous tool
-      showColorPalette: Show colors
-      showInkAttributes: Show ink attributes
-      showToolPalette: Show tool options
 zh-Hant-TW:
-  settings:
-    prefLabels:
-      applePencilDoubleTapAction: Apple Pencil double-tap
-      applePencilSqueezeAction: Apple Pencil squeeze
-      applePencilTipPreview: Apple Pencil tip preview
-    prefDescriptions:
-      applePencilDoubleTapAction: Follow or override the iPadOS Apple Pencil double-tap setting
-      applePencilSqueezeAction: Follow or override the iPadOS Apple Pencil Pro squeeze setting
-      applePencilTipPreview: Show the current tool footprint while Apple Pencil is hovering
-    applePencilActions:
-      system: System
-      disabled: Disabled
-      toggleEraser: Toggle eraser
-      switchPreviousTool: Previous tool
-      showColorPalette: Show colors
-      showInkAttributes: Show ink attributes
-      showToolPalette: Show tool options

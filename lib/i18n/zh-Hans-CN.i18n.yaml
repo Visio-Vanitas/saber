@@ -1,3 +1,5 @@
+# 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+
 common:
   done: 完成
   continueBtn: 继续
@@ -108,6 +110,9 @@ settings:
     disableEraserAfterUse: 自动禁用橡皮擦
     hideFingerDrawingToggle: 隐藏 切换手指绘图
     autoDisableFingerDrawingWhenStylusDetected: 自动禁用手指绘图
+    applePencilDoubleTapAction: Apple Pencil 轻点两下
+    applePencilSqueezeAction: Apple Pencil 挤压
+    applePencilTipPreview: Apple Pencil 笔尖位置预览
     editorPromptRename: 提示您重命名新笔记
     recentColorsDontSavePresets: 不在最近使用的颜色中保存预设颜色
     recentColorsLength: 要存储多少种最近的颜色
@@ -130,6 +135,9 @@ settings:
       fixedOn: 手指绘图固定为启用状态
       fixedOff: 手指绘图固定为禁用状态
     autoDisableFingerDrawingWhenStylusDetected: 当检测到手写笔时关闭手指绘图
+    applePencilDoubleTapAction: 跟随或覆盖 iPadOS 的 Apple Pencil 轻点两下设置
+    applePencilSqueezeAction: 跟随或覆盖 iPadOS 的 Apple Pencil Pro 挤压设置
+    applePencilTipPreview: 当 Apple Pencil 悬停时显示当前工具的作用范围
     editorPromptRename: 您可以总是稍后重命名笔记
     printPageIndicators: 在导出中显示页码
     autosave: 短暂延迟后自动保存，或永不保存
@@ -158,6 +166,14 @@ settings:
   - 右
   - 下
   - 左
+  applePencilActions:
+    system: 系统
+    disabled: 禁用
+    toggleEraser: 切换橡皮擦
+    switchPreviousTool: 上一个工具
+    showColorPalette: 显示调色板
+    showInkAttributes: 显示墨水属性
+    showToolPalette: 显示工具选项
   reset:
     title: 重置此设置？
     button: 重置

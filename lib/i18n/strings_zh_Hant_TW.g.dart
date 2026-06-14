@@ -1,4 +1,6 @@
 ///
+/// 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+///
 /// Generated file. Do not edit.
 ///
 // coverage:ignore-file
@@ -113,6 +115,7 @@ class Translations$settings$zh_Hant_TW extends Translations$settings$en {
 		'置底',
 		'靠左',
 	];
+	@override late final Translations$settings$applePencilActions$zh_Hant_TW applePencilActions = Translations$settings$applePencilActions$zh_Hant_TW.internal(_root);
 	@override late final Translations$settings$reset$zh_Hant_TW reset = Translations$settings$reset$zh_Hant_TW.internal(_root);
 	@override String get resyncEverything => '全部重新同步';
 	@override String get openDataDir => '開啟 Saber 資料夾';
@@ -421,6 +424,9 @@ class Translations$settings$prefLabels$zh_Hant_TW extends Translations$settings$
 	@override String get disableEraserAfterUse => '自動停用橡皮擦';
 	@override String get hideFingerDrawingToggle => '隱藏手指繪圖切換開關';
 	@override String get autoDisableFingerDrawingWhenStylusDetected => '自動停用手指繪圖';
+	@override String get applePencilDoubleTapAction => 'Apple Pencil 輕點兩下';
+	@override String get applePencilSqueezeAction => 'Apple Pencil 按壓';
+	@override String get applePencilTipPreview => 'Apple Pencil 筆尖位置預覽';
 	@override String get editorPromptRename => '提醒您重新命名新筆記';
 	@override String get recentColorsDontSavePresets => '不要在最近的顏色中儲存預設顏色';
 	@override String get recentColorsLength => '要儲存多少種最近的顏色';
@@ -448,6 +454,9 @@ class Translations$settings$prefDescriptions$zh_Hant_TW extends Translations$set
 	@override String get maxImageSize => '大於此大小的圖片將被壓縮';
 	@override late final Translations$settings$prefDescriptions$hideFingerDrawing$zh_Hant_TW hideFingerDrawing = Translations$settings$prefDescriptions$hideFingerDrawing$zh_Hant_TW.internal(_root);
 	@override String get autoDisableFingerDrawingWhenStylusDetected => '偵測到觸控筆時自動停用手指繪圖';
+	@override String get applePencilDoubleTapAction => '跟隨或覆寫 iPadOS 的 Apple Pencil 輕點兩下設定';
+	@override String get applePencilSqueezeAction => '跟隨或覆寫 iPadOS 的 Apple Pencil Pro 按壓設定';
+	@override String get applePencilTipPreview => 'Apple Pencil 懸停時顯示目前工具的作用範圍';
 	@override String get editorPromptRename => '您以後隨時可以重新命名筆記';
 	@override String get printPageIndicators => '在匯出中顯示頁碼';
 	@override String get autosave => '在短暫延遲後自動儲存，或永不儲存';
@@ -490,6 +499,22 @@ class Translations$settings$accentColorPicker$zh_Hant_TW extends Translations$se
 
 	// Translations
 	@override String get pickAColor => '選取顏色';
+}
+
+// Path: settings.applePencilActions
+class Translations$settings$applePencilActions$zh_Hant_TW extends Translations$settings$applePencilActions$en {
+	Translations$settings$applePencilActions$zh_Hant_TW.internal(TranslationsZhHantTw root) : this._root = root, super.internal(root);
+
+	final TranslationsZhHantTw _root; // ignore: unused_field
+
+	// Translations
+	@override String get system => '系統';
+	@override String get disabled => '停用';
+	@override String get toggleEraser => '切換橡皮擦';
+	@override String get switchPreviousTool => '上一個工具';
+	@override String get showColorPalette => '顯示調色盤';
+	@override String get showInkAttributes => '顯示墨水屬性';
+	@override String get showToolPalette => '顯示工具選項';
 }
 
 // Path: settings.reset
