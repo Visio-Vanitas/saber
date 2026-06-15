@@ -415,6 +415,7 @@ class Translations$settings$prefLabels$zh_Hans_CN extends Translations$settings$
 	@override String get shouldCheckForUpdates => '自动检查 Saber 更新';
 	@override String get shouldAlwaysAlertForUpdates => '更快的更新提醒';
 	@override String get allowInsecureConnections => '允许不安全的连接';
+	@override String get peripheralDebugDataWindow => '调试数据窗口';
 	@override String get editorToolbarAlignment => '编辑工具栏对齐方式';
 	@override String get editorToolbarShowInFullscreen => '在全屏模式中显示编辑菜单栏';
 	@override String get editorAutoInvert => '在深色模式下使用反色笔记背景';
@@ -448,6 +449,7 @@ class Translations$settings$prefDescriptions$zh_Hans_CN extends Translations$set
 	// Translations
 	@override String get hyperlegibleFont => 'Atkinson Hyperlegible 字体为低视力读者提高易读性';
 	@override String get allowInsecureConnections => '（不推荐）允许 Saber 连接到具有自签名/不受信任证书的服务器';
+	@override String get peripheralDebugDataWindow => '编辑时显示实时手写笔坐标、压力、侧旋和原生遥测数据';
 	@override String get preferGreyscale => '用于电子墨水显示器';
 	@override String get autoClearWhiteboardOnExit => '这将会同步到您的其他设备';
 	@override String get disableEraserAfterUse => '使用橡皮擦后自动切换回笔';
@@ -704,6 +706,26 @@ class Translations$editor$penOptions$zh_Hans_CN extends Translations$editor$penO
 
 	// Translations
 	@override String get size => '粗细';
+	@override String get advancedSettings => '高级';
+	@override String get applyAdvancedSettings => '应用';
+	@override String get copyPresetFrom => '粘贴参数';
+	@override String get copyPresetTo => '复制参数';
+	@override String get smoothing => '平滑';
+	@override String get smoothingDescription => '笔画完成后柔化拐角';
+	@override String get streamline => '跟手';
+	@override String get streamlineDescription => '跟随略慢但书写更稳';
+	@override String get pressureWidth => '压感宽度';
+	@override String get pressureWidthDescription => '控制压力对笔迹粗细的影响';
+	@override String get pressureCurve => '压力曲线';
+	@override String get pressureCurveDescription => '靠近控制点会抓取；0% 区段会作为死区忽略落笔';
+	@override String get pressureCurveUnavailable => '这支笔不使用压感';
+	@override String get resetPressureCurve => '重置压力曲线';
+	@override String get tiltSensitivity => '倾斜';
+	@override String get tiltSensitivityDescription => '低角度会让笔迹更宽、更深';
+	@override String get rollSensitivity => '侧旋';
+	@override String get rollSensitivityDescription => '旋转纹理或笔尖角度';
+	@override String get continuousWritingWindow => '连续书写窗口';
+	@override String get continuousWritingWindowDescription => '短暂停顿内开始的笔画不会自动拉直';
 }
 
 // Path: editor.colors

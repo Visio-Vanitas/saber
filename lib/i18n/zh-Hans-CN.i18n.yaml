@@ -101,6 +101,7 @@ settings:
     shouldCheckForUpdates: 自动检查 Saber 更新
     shouldAlwaysAlertForUpdates: 更快的更新提醒
     allowInsecureConnections: 允许不安全的连接
+    peripheralDebugDataWindow: 调试数据窗口
     editorToolbarAlignment: 编辑工具栏对齐方式
     editorToolbarShowInFullscreen: 在全屏模式中显示编辑菜单栏
     editorAutoInvert: 在深色模式下使用反色笔记背景
@@ -126,6 +127,7 @@ settings:
   prefDescriptions:
     hyperlegibleFont: Atkinson Hyperlegible 字体为低视力读者提高易读性
     allowInsecureConnections: （不推荐）允许 Saber 连接到具有自签名/不受信任证书的服务器
+    peripheralDebugDataWindow: 编辑时显示实时手写笔坐标、压力、侧旋和原生遥测数据
     preferGreyscale: 用于电子墨水显示器
     autoClearWhiteboardOnExit: 这将会同步到您的其他设备
     disableEraserAfterUse: 使用橡皮擦后自动切换回笔
@@ -296,6 +298,26 @@ editor:
     laserPointer: 激光笔
   penOptions:
     size: 粗细
+    advancedSettings: 高级
+    applyAdvancedSettings: 应用
+    copyPresetFrom: 粘贴参数
+    copyPresetTo: 复制参数
+    smoothing: 平滑
+    smoothingDescription: 笔画完成后柔化拐角
+    streamline: 跟手
+    streamlineDescription: 跟随略慢但书写更稳
+    pressureWidth: 压感宽度
+    pressureWidthDescription: 控制压力对笔迹粗细的影响
+    pressureCurve: 压力曲线
+    pressureCurveDescription: 靠近控制点会抓取；0% 区段会作为死区忽略落笔
+    pressureCurveUnavailable: 这支笔不使用压感
+    resetPressureCurve: 重置压力曲线
+    tiltSensitivity: 倾斜
+    tiltSensitivityDescription: 低角度会让笔迹更宽、更深
+    rollSensitivity: 侧旋
+    rollSensitivityDescription: 旋转纹理或笔尖角度
+    continuousWritingWindow: 连续书写窗口
+    continuousWritingWindowDescription: 短暂停顿内开始的笔画不会自动拉直
   colors:
     colorPicker: 选色器
     customBrightnessHue: 自定义 $b $h

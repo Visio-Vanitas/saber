@@ -415,6 +415,7 @@ class Translations$settings$prefLabels$zh_Hant_TW extends Translations$settings$
 	@override String get shouldCheckForUpdates => '自動檢查 Saber 更新';
 	@override String get shouldAlwaysAlertForUpdates => '更快的更新';
 	@override String get allowInsecureConnections => '允許不安全連線';
+	@override String get peripheralDebugDataWindow => '調試資料視窗';
 	@override String get editorToolbarAlignment => '編輯器工具列的對齊方式';
 	@override String get editorToolbarShowInFullscreen => '在全螢幕模式中顯示編輯器工具列';
 	@override String get editorAutoInvert => '在深色模式下使用反轉色筆記背景';
@@ -448,6 +449,7 @@ class Translations$settings$prefDescriptions$zh_Hant_TW extends Translations$set
 	// Translations
 	@override String get hyperlegibleFont => 'Atkinson Hyperlegible 字型為低視力讀者提高易讀性';
 	@override String get allowInsecureConnections => '（不推薦）允許 Saber 連線到有自行簽署/不受信任憑證的伺服器';
+	@override String get peripheralDebugDataWindow => '編輯時顯示即時觸控筆座標、壓力、側旋和原生遙測資料';
 	@override String get preferGreyscale => '用於電子紙螢幕';
 	@override String get autoClearWhiteboardOnExit => '在您結束應用程式後清除白板';
 	@override String get disableEraserAfterUse => '使用橡皮擦後自動切換回筆';
@@ -704,6 +706,26 @@ class Translations$editor$penOptions$zh_Hant_TW extends Translations$editor$penO
 
 	// Translations
 	@override String get size => '粗細';
+	@override String get advancedSettings => '進階';
+	@override String get applyAdvancedSettings => '套用';
+	@override String get copyPresetFrom => '貼上參數';
+	@override String get copyPresetTo => '複製參數';
+	@override String get smoothing => '平滑';
+	@override String get smoothingDescription => '筆畫完成後柔化轉角';
+	@override String get streamline => '跟手';
+	@override String get streamlineDescription => '跟隨略慢但書寫更穩';
+	@override String get pressureWidth => '壓感寬度';
+	@override String get pressureWidthDescription => '控制壓力對筆跡粗細的影響';
+	@override String get pressureCurve => '壓力曲線';
+	@override String get pressureCurveDescription => '靠近控制點會抓取；0% 區段會作為死區忽略落筆';
+	@override String get pressureCurveUnavailable => '這支筆不使用壓感';
+	@override String get resetPressureCurve => '重設壓力曲線';
+	@override String get tiltSensitivity => '傾斜';
+	@override String get tiltSensitivityDescription => '低角度會讓筆跡更寬、更深';
+	@override String get rollSensitivity => '側旋';
+	@override String get rollSensitivityDescription => '旋轉紋理或筆尖角度';
+	@override String get continuousWritingWindow => '連續書寫視窗';
+	@override String get continuousWritingWindowDescription => '短暫停頓內開始的筆畫不會自動拉直';
 }
 
 // Path: editor.colors
