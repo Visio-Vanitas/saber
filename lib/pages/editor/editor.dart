@@ -55,6 +55,7 @@ import 'package:saber/data/tools/peripheral_debug_data.dart';
 import 'package:saber/data/tools/select.dart';
 import 'package:saber/data/tools/shape_pen.dart';
 import 'package:saber/data/tools/stylus_hover_preview.dart';
+import 'package:saber/data/tools/stylus_pose.dart';
 import 'package:saber/data/tools/stylus_sample.dart';
 import 'package:saber/i18n/strings.g.dart';
 import 'package:saber/pages/home/whiteboard.dart';
@@ -66,6 +67,8 @@ typedef _ApplePencilInteractionSubscription =
     StreamSubscription<ApplePencilInteractionEvent>;
 typedef _ApplePencilHoverSubscription =
     StreamSubscription<ApplePencilHoverEvent>;
+typedef _ApplePencilTelemetrySubscription =
+    StreamSubscription<ApplePencilTelemetryEvent>;
 
 class Editor extends StatefulWidget {
   Editor({
@@ -75,6 +78,7 @@ class Editor extends StatefulWidget {
     this.pdfPath,
     this.applePencilInteractionService,
     this.applePencilHoverService,
+    this.applePencilTelemetryService,
   }) : initialPath = path != null
            ? Future.value(path)
            : FileManager.newFilePath('/'),
@@ -95,6 +99,11 @@ class Editor extends StatefulWidget {
   ///
   /// Tests can inject a fake service to avoid the native iOS channel.
   final ApplePencilHoverService? applePencilHoverService;
+
+  /// Provides native Apple Pencil writing telemetry events.
+  ///
+  /// Tests can inject a fake service to avoid the native iOS channel.
+  final ApplePencilTelemetryService? applePencilTelemetryService;
 
   /// The file extension used by the app.
   /// Files with this extension are
@@ -319,6 +328,24 @@ class _DebugDataRow extends StatelessWidget {
 }
 
 class EditorState extends State<Editor> {
+  /// Consecutive handwriting strokes inside this interval skip auto-straighten.
+  static const continuousWritingAutoStraightenSuppressionWindow = Duration(
+    milliseconds: 900,
+  );
+
+  /// Returns whether auto-straighten should pause for continuous handwriting.
+  static bool shouldSuppressAutoStraightenForContinuousWriting({
+    required DateTime? previousStrokeEndedAt,
+    required DateTime currentStrokeStartedAt,
+    Duration window = continuousWritingAutoStraightenSuppressionWindow,
+  }) {
+    if (previousStrokeEndedAt == null) return false;
+    if (window <= Duration.zero) return false;
+
+    final gap = currentStrokeStartedAt.difference(previousStrokeEndedAt);
+    return gap >= Duration.zero && gap <= window;
+  }
+
   final log = Logger('EditorState');
 
   late var coreInfo = EditorCoreInfo.placeholder;
@@ -327,6 +354,8 @@ class EditorState extends State<Editor> {
   final _toolbarKey = GlobalKey<ToolbarState>();
   _ApplePencilInteractionSubscription? _applePencilInteractionSubscription;
   _ApplePencilHoverSubscription? _applePencilHoverSubscription;
+  _ApplePencilTelemetrySubscription? _applePencilTelemetrySubscription;
+  Timer? _applePencilSubscriptionTimer;
   final _transformationController = TransformationController();
   double get scrollY {
     final transformation = _transformationController.value;
@@ -423,13 +452,44 @@ class EditorState extends State<Editor> {
   @override
   void initState() {
     DynamicMaterialApp.addFullscreenListener(_setState);
+    Pen.advancedSettingsOpen.addListener(_onPenAdvancedSettingsOpenChanged);
 
-    _listenToApplePencilInteractions();
-    _listenToApplePencilHover();
+    _scheduleApplePencilSubscriptions();
     _initAsync();
     _assignKeybindings();
 
     super.initState();
+  }
+
+  void _onPenAdvancedSettingsOpenChanged() {
+    if (!Pen.advancedSettingsOpen.value) return;
+    clearStylusHoverPreview();
+  }
+
+  void _scheduleApplePencilSubscriptions() {
+    final hasInjectedService =
+        widget.applePencilInteractionService != null ||
+        widget.applePencilHoverService != null ||
+        widget.applePencilTelemetryService != null;
+    if (hasInjectedService) {
+      _listenToApplePencilServices();
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _applePencilSubscriptionTimer = Timer(
+        const Duration(milliseconds: 350),
+        _listenToApplePencilServices,
+      );
+    });
+  }
+
+  void _listenToApplePencilServices() {
+    if (!mounted) return;
+    _listenToApplePencilInteractions();
+    _listenToApplePencilHover();
+    _listenToApplePencilTelemetry();
   }
 
   void _listenToApplePencilInteractions() {
@@ -456,6 +516,18 @@ class EditorState extends State<Editor> {
       _handleApplePencilHover,
       onError: (Object error, StackTrace stackTrace) {
         log.warning('Apple Pencil hover stream failed', error, stackTrace);
+      },
+    );
+  }
+
+  void _listenToApplePencilTelemetry() {
+    final service =
+        widget.applePencilTelemetryService ??
+        const EventChannelApplePencilTelemetryService();
+    _applePencilTelemetrySubscription = service.events.listen(
+      _handleApplePencilTelemetry,
+      onError: (Object error, StackTrace stackTrace) {
+        log.warning('Apple Pencil telemetry stream failed', error, stackTrace);
       },
     );
   }
@@ -797,7 +869,9 @@ class EditorState extends State<Editor> {
       hoverDistanceMax: event.distanceMax,
     );
 
-    if (!stows.applePencilTipPreview.value || coreInfo.readOnly) {
+    if (Pen.advancedSettingsOpen.value ||
+        !stows.applePencilTipPreview.value ||
+        coreInfo.readOnly) {
       clearStylusHoverPreview();
       return;
     }
@@ -809,11 +883,17 @@ class EditorState extends State<Editor> {
         distanceMax: event.distanceMax,
       ),
       invertedStylus: event.kind == PointerDeviceKind.invertedStylus,
+      directionAngle: event.orientation,
     );
   }
 
   void _handleApplePencilHover(ApplePencilHoverEvent event) {
-    const sample = StylusSample(kind: PointerDeviceKind.stylus);
+    final sample = StylusSample(
+      kind: PointerDeviceKind.stylus,
+      altitudeAngle: event.altitudeAngle,
+      azimuthAngle: event.azimuthAngle,
+      rollAngle: event.rollAngle,
+    );
     _recordPeripheralDebugData(
       source: 'native hover',
       active: event.isActive,
@@ -828,7 +908,9 @@ class EditorState extends State<Editor> {
       return;
     }
 
-    if (!stows.applePencilTipPreview.value || coreInfo.readOnly) {
+    if (Pen.advancedSettingsOpen.value ||
+        !stows.applePencilTipPreview.value ||
+        coreInfo.readOnly) {
       clearStylusHoverPreview();
       return;
     }
@@ -842,6 +924,75 @@ class EditorState extends State<Editor> {
               distance: zOffset.clamp(0.0, 1.0).toDouble(),
               distanceMax: 1,
             ),
+      directionAngle:
+          StylusPose.canvasAngleFromNativeRoll(event.rollAngle) ??
+          event.azimuthAngle,
+    );
+  }
+
+  void _handleApplePencilTelemetry(ApplePencilTelemetryEvent event) {
+    _recordTelemetryDebugData(event);
+
+    if (!event.isActive) {
+      updatePointerData(const StylusSample(kind: PointerDeviceKind.stylus));
+      return;
+    }
+
+    updatePointerData(event.sample.toStylusSample());
+    _appendNativeTelemetryToCurrentStroke(event);
+  }
+
+  void _appendNativeTelemetryToCurrentStroke(ApplePencilTelemetryEvent event) {
+    if (dragPageIndex == null) return;
+    if (currentTool is! Pen) return;
+
+    final page = coreInfo.pages[dragPageIndex!];
+    final renderBox = page.renderBox;
+    if (renderBox == null) return;
+
+    var didAppend = false;
+    for (final sample in event.realSamples) {
+      final timestamp = sample.timestamp;
+      if (timestamp != null &&
+          _lastNativeTelemetryTimestamp != null &&
+          timestamp <= _lastNativeTelemetryTimestamp!) {
+        continue;
+      }
+
+      final stylusSample = sample.toStylusSample();
+      final hadCurrentStroke = Pen.currentStroke != null;
+      final completedStrokeSegment = (currentTool as Pen).onDragUpdate(
+        renderBox.globalToLocal(sample.precisePosition),
+        stylusSample,
+      );
+      if (completedStrokeSegment != null) {
+        _insertCompletedPenStrokeSegment(completedStrokeSegment, page);
+      }
+      if (!hadCurrentStroke && Pen.currentStroke != null) {
+        setState(() {});
+      }
+      _lastNativeTelemetryTimestamp = timestamp;
+      didAppend = true;
+    }
+
+    if (!didAppend) return;
+
+    _nativeTelemetryDrawingActive = true;
+    page.redrawStrokes();
+  }
+
+  void _recordTelemetryDebugData(ApplePencilTelemetryEvent event) {
+    final sample = event.sample;
+    _recordPeripheralDebugData(
+      source: 'native touch',
+      active: event.isActive,
+      sample: sample.toStylusSample(),
+      globalPosition: sample.precisePosition,
+      force: sample.force,
+      maximumPossibleForce: sample.maximumPossibleForce,
+      majorRadius: sample.majorRadius,
+      coalescedCount: event.coalescedSamples.length,
+      predictedCount: event.predictedSamples.length,
     );
   }
 
@@ -865,6 +1016,10 @@ class EditorState extends State<Editor> {
     final pageLookup = globalPosition == null
         ? null
         : _pagePositionForGlobal(globalPosition);
+    final effectivePressure = currentTool is Pen
+        ? (currentTool as Pen).effectivePressureForSample(sample)
+        : null;
+
     _peripheralDebugData.value = PeripheralDebugData(
       source: source,
       updatedAt: DateTime.now(),
@@ -874,14 +1029,19 @@ class EditorState extends State<Editor> {
       globalPosition: globalPosition,
       pagePosition: pagePosition ?? pageLookup?.pagePosition,
       rawPressure: sample?.pressure,
-      effectivePressure: sample?.pressure,
+      effectivePressure: effectivePressure,
       force: force,
       maximumPossibleForce: maximumPossibleForce,
       hoverDistance: hoverDistance,
       hoverDistanceMax: hoverDistanceMax,
       tilt: sample?.tilt,
       orientation: sample?.orientation,
+      altitudeAngle: sample?.altitudeAngle,
+      azimuthAngle: sample?.azimuthAngle,
+      rollAngle: sample?.rollAngle,
       majorRadius: majorRadius,
+      timestamp: sample?.timestamp,
+      sourceFlags: sample?.sourceFlags,
       coalescedCount: coalescedCount,
       predictedCount: predictedCount,
     );
@@ -891,6 +1051,7 @@ class EditorState extends State<Editor> {
     required Offset globalPosition,
     required double opacity,
     bool invertedStylus = false,
+    double? directionAngle,
   }) {
     final pageIndex = onWhichPageIsFocalPoint(globalPosition);
     if (pageIndex == null) {
@@ -909,6 +1070,7 @@ class EditorState extends State<Editor> {
       position: renderBox.globalToLocal(globalPosition),
       opacity: opacity,
       invertedStylus: invertedStylus,
+      directionAngle: directionAngle,
     );
     if (preview == null) {
       clearStylusHoverPreview();
@@ -934,6 +1096,7 @@ class EditorState extends State<Editor> {
     required Offset position,
     required double opacity,
     bool invertedStylus = false,
+    double? directionAngle,
   }) {
     final tool = invertedStylus ? Eraser() : currentTool;
 
@@ -946,6 +1109,7 @@ class EditorState extends State<Editor> {
         opacity: opacity,
         kind: StylusHoverPreviewKind.eraser,
         invertedStylus: invertedStylus,
+        directionAngle: null,
       );
     }
 
@@ -958,6 +1122,7 @@ class EditorState extends State<Editor> {
         opacity: opacity,
         kind: StylusHoverPreviewKind.drawing,
         invertedStylus: invertedStylus,
+        directionAngle: directionAngle,
       );
     }
 
@@ -976,6 +1141,12 @@ class EditorState extends State<Editor> {
   int? dragPageIndex;
   PointerDeviceKind? currentPointerKind;
   StylusSample? currentStylusSample;
+  final _completedPenStrokeSegments = <Stroke>[];
+  var _nativeTelemetryDrawingActive = false;
+  double? _lastNativeTelemetryTimestamp;
+  DateTime? _lastWritingStrokeEndedAt;
+  var _suppressAutoStraightenForCurrentStroke = false;
+
   bool isDrawGesture(ScaleStartDetails details) {
     if (coreInfo.readOnly) return false;
     clearStylusHoverPreview();
@@ -1021,6 +1192,19 @@ class EditorState extends State<Editor> {
 
   void onDrawStart(ScaleStartDetails details) {
     clearStylusHoverPreview();
+    _completedPenStrokeSegments.clear();
+    _nativeTelemetryDrawingActive = false;
+    _lastNativeTelemetryTimestamp = null;
+    _suppressAutoStraightenForCurrentStroke =
+        currentTool is Pen &&
+        currentTool is! ShapePen &&
+        shouldSuppressAutoStraightenForContinuousWriting(
+          previousStrokeEndedAt: _lastWritingStrokeEndedAt,
+          currentStrokeStartedAt: DateTime.now(),
+          window: Duration(
+            milliseconds: stows.continuousWritingAutoStraightenWindowMs.value,
+          ),
+        );
 
     final page = coreInfo.pages[dragPageIndex!];
     final position = page.renderBox!.globalToLocal(details.focalPoint);
@@ -1078,7 +1262,7 @@ class EditorState extends State<Editor> {
     final page = coreInfo.pages[dragPageIndex!];
     final position = page.renderBox!.globalToLocal(details.focalPoint);
     _recordPeripheralDebugData(
-      source: 'draw update',
+      source: _nativeTelemetryDrawingActive ? 'native touch' : 'draw update',
       active: true,
       sample: currentStylusSample,
       globalPosition: details.focalPoint,
@@ -1088,7 +1272,19 @@ class EditorState extends State<Editor> {
     final offset = position - previousPosition;
 
     if (currentTool is Pen) {
-      (currentTool as Pen).onDragUpdate(position, currentStylusSample);
+      if (!_nativeTelemetryDrawingActive) {
+        final hadCurrentStroke = Pen.currentStroke != null;
+        final completedStrokeSegment = (currentTool as Pen).onDragUpdate(
+          position,
+          currentStylusSample,
+        );
+        if (completedStrokeSegment != null) {
+          _insertCompletedPenStrokeSegment(completedStrokeSegment, page);
+        }
+        if (!hadCurrentStroke && Pen.currentStroke != null) {
+          setState(() {});
+        }
+      }
       page.redrawStrokes();
     } else if (currentTool is Eraser) {
       for (final stroke in (currentTool as Eraser).checkForOverlappingStrokes(
@@ -1121,31 +1317,50 @@ class EditorState extends State<Editor> {
     moveOffset += offset;
   }
 
+  void _insertCompletedPenStrokeSegment(Stroke stroke, EditorPage page) {
+    if (stroke.isEmpty) return;
+
+    _prepareCompletedPenStroke(stroke);
+    createPage(stroke.pageIndex);
+    page.insertStroke(stroke);
+    _completedPenStrokeSegments.add(stroke);
+  }
+
+  void _prepareCompletedPenStroke(Stroke stroke) {
+    if (stows.autoStraightenLines.value &&
+        currentTool is! ShapePen &&
+        !_suppressAutoStraightenForCurrentStroke &&
+        stroke.isStraightLine()) {
+      stroke.convertToLine();
+    }
+  }
+
   void onDrawEnd(ScaleEndDetails details) {
     final page = coreInfo.pages[dragPageIndex!];
     bool shouldSave = true;
+    var didFinishWritingStroke = false;
     setState(() {
       if (currentTool is Pen) {
+        final newStrokes = [..._completedPenStrokeSegments];
         final newStroke = (currentTool as Pen).onDragEnd();
-        if (newStroke == null) return;
-        if (newStroke.isEmpty) return;
-
-        if (stows.autoStraightenLines.value &&
-            currentTool is! ShapePen &&
-            newStroke.isStraightLine()) {
-          newStroke.convertToLine();
+        if (newStroke != null && !newStroke.isEmpty) {
+          _prepareCompletedPenStroke(newStroke);
+          createPage(newStroke.pageIndex);
+          page.insertStroke(newStroke);
+          newStrokes.add(newStroke);
         }
 
-        createPage(newStroke.pageIndex);
-        page.insertStroke(newStroke);
+        if (newStrokes.isEmpty) return;
+
         history.recordChange(
           EditorHistoryItem(
             type: .draw,
             pageIndex: dragPageIndex!,
-            strokes: [newStroke],
+            strokes: newStrokes,
             images: [],
           ),
         );
+        didFinishWritingStroke = currentTool is! ShapePen;
       } else if (currentTool is Eraser) {
         final erased = (currentTool as Eraser).onDragEnd();
         if (stylusButtonWasPressed || stows.disableEraserAfterUse.value) {
@@ -1201,6 +1416,13 @@ class EditorState extends State<Editor> {
     });
 
     if (shouldSave) autosaveAfterDelay();
+    if (didFinishWritingStroke) {
+      _lastWritingStrokeEndedAt = DateTime.now();
+    }
+    _completedPenStrokeSegments.clear();
+    _suppressAutoStraightenForCurrentStroke = false;
+    _nativeTelemetryDrawingActive = false;
+    _lastNativeTelemetryTimestamp = null;
     _recordPeripheralDebugData(
       source: 'draw end',
       active: false,
@@ -1516,7 +1738,7 @@ class EditorState extends State<Editor> {
     }
 
     callback = () {
-      if (Pen.currentStroke != null) {
+      if (Pen.currentStroke != null || _completedPenStrokeSegments.isNotEmpty) {
         // don't save yet if the pen is currently drawing
         startTimer();
         return;
@@ -2690,12 +2912,15 @@ class EditorState extends State<Editor> {
     unawaited(_cleanUpAsync());
 
     DynamicMaterialApp.removeFullscreenListener(_setState);
+    Pen.advancedSettingsOpen.removeListener(_onPenAdvancedSettingsOpenChanged);
 
     _delayedSaveTimer?.cancel();
     _watchServerTimer?.cancel();
     _lastSeenPointerCountTimer?.cancel();
+    _applePencilSubscriptionTimer?.cancel();
     _applePencilInteractionSubscription?.cancel();
     _applePencilHoverSubscription?.cancel();
+    _applePencilTelemetrySubscription?.cancel();
     _peripheralDebugData.dispose();
 
     _removeKeybindings();

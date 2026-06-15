@@ -12,6 +12,8 @@ import workmanager_apple
   private var applePencilInteractionHandler: AnyObject?
   private var applePencilHoverChannel: FlutterEventChannel?
   private var applePencilHoverHandler: AnyObject?
+  private var applePencilTelemetryChannel: FlutterEventChannel?
+  private var applePencilTelemetryHandler: AnyObject?
   private var applePencilInteractionSetupAttempts = 0
 
   /// Registers all pubspec-referenced Flutter plugins in the given registry
@@ -44,7 +46,7 @@ import workmanager_apple
   }
 
   private func setupApplePencilInteraction() {
-    guard applePencilInteractionHandler == nil || applePencilHoverHandler == nil else { return }
+    guard applePencilInteractionHandler == nil || applePencilHoverHandler == nil || applePencilTelemetryHandler == nil else { return }
     guard let controller = currentFlutterViewController() else {
       retryApplePencilInteractionSetup()
       return
@@ -72,6 +74,18 @@ import workmanager_apple
       handler.attach(to: controller.view)
       applePencilHoverChannel = channel
       applePencilHoverHandler = handler
+    }
+
+    if applePencilTelemetryHandler == nil {
+      let handler = ApplePencilTelemetryStreamHandler()
+      let channel = FlutterEventChannel(
+        name: "saber/apple_pencil_telemetry/events",
+        binaryMessenger: controller.binaryMessenger
+      )
+      channel.setStreamHandler(handler)
+      handler.attach(to: controller.view)
+      applePencilTelemetryChannel = channel
+      applePencilTelemetryHandler = handler
     }
   }
 
@@ -125,6 +139,205 @@ import workmanager_apple
     }
 
     return nil
+  }
+}
+
+private final class ApplePencilTelemetryStreamHandler: NSObject,
+  FlutterStreamHandler,
+  UIGestureRecognizerDelegate,
+  ApplePencilTelemetryGestureRecognizerDelegate
+{
+  private static let sourceReal = 1
+  private static let sourceCoalesced = 1 << 1
+  private static let sourcePredicted = 1 << 2
+  private static let sourceEstimated = 1 << 3
+
+  private var eventSink: FlutterEventSink?
+  private weak var view: UIView?
+  private var recognizer: ApplePencilTelemetryGestureRecognizer?
+
+  func attach(to view: UIView) {
+    self.view = view
+
+    let recognizer = ApplePencilTelemetryGestureRecognizer()
+    recognizer.cancelsTouchesInView = false
+    recognizer.delaysTouchesBegan = false
+    recognizer.delaysTouchesEnded = false
+    recognizer.requiresExclusiveTouchType = false
+    recognizer.delegate = self
+    recognizer.telemetryDelegate = self
+    view.addGestureRecognizer(recognizer)
+    self.recognizer = recognizer
+  }
+
+  func onListen(
+    withArguments arguments: Any?,
+    eventSink events: @escaping FlutterEventSink
+  ) -> FlutterError? {
+    eventSink = events
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    eventSink = nil
+    return nil
+  }
+
+  func gestureRecognizer(
+    _ gestureRecognizer: UIGestureRecognizer,
+    shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+  ) -> Bool {
+    return true
+  }
+
+  func applePencilTelemetryGestureRecognizer(
+    _ recognizer: ApplePencilTelemetryGestureRecognizer,
+    didReceive touches: Set<UITouch>,
+    with event: UIEvent,
+    phase: String
+  ) {
+    guard let view else { return }
+
+    for touch in touches where touch.type == .pencil {
+      var payload = Self.payload(
+        for: touch,
+        in: view,
+        phase: phase,
+        sourceFlags: Self.sourceReal
+      )
+
+      payload["coalesced"] = (event.coalescedTouches(for: touch) ?? [])
+        .filter { $0.type == .pencil }
+        .map {
+          Self.payload(
+            for: $0,
+            in: view,
+            phase: phase,
+            sourceFlags: Self.sourceCoalesced
+          )
+        }
+
+      payload["predicted"] = (event.predictedTouches(for: touch) ?? [])
+        .filter { $0.type == .pencil }
+        .map {
+          Self.payload(
+            for: $0,
+            in: view,
+            phase: "changed",
+            sourceFlags: Self.sourcePredicted
+          )
+        }
+
+      eventSink?(payload)
+    }
+  }
+
+  private static func payload(
+    for touch: UITouch,
+    in view: UIView,
+    phase: String,
+    sourceFlags: Int
+  ) -> [String: Any] {
+    let location = touch.location(in: view)
+    let preciseLocation = touch.preciseLocation(in: view)
+    let maximumPossibleForce = touch.maximumPossibleForce
+    let force = touch.force
+    var flags = sourceFlags
+
+    if touch.estimatedProperties.rawValue != 0 {
+      flags |= sourceEstimated
+    }
+
+    var payload: [String: Any] = [
+      "phase": phase,
+      "x": location.x,
+      "y": location.y,
+      "preciseX": preciseLocation.x,
+      "preciseY": preciseLocation.y,
+      "timestamp": touch.timestamp,
+      "force": force,
+      "maximumPossibleForce": maximumPossibleForce,
+      "majorRadius": touch.majorRadius,
+      "majorRadiusTolerance": touch.majorRadiusTolerance,
+      "altitudeAngle": touch.altitudeAngle,
+      "azimuthAngle": touch.azimuthAngle(in: view),
+      "azimuthUnitX": touch.azimuthUnitVector(in: view).dx,
+      "azimuthUnitY": touch.azimuthUnitVector(in: view).dy,
+      "estimatedProperties": touch.estimatedProperties.rawValue,
+      "estimatedPropertiesExpectingUpdates": touch.estimatedPropertiesExpectingUpdates.rawValue,
+      "sourceFlags": flags,
+    ]
+
+    if maximumPossibleForce > 0 {
+      payload["pressure"] = min(1, max(0, force / maximumPossibleForce))
+    }
+
+    if #available(iOS 17.5, *) {
+      payload["rollAngle"] = touch.rollAngle
+    }
+
+    return payload
+  }
+}
+
+private protocol ApplePencilTelemetryGestureRecognizerDelegate: AnyObject {
+  func applePencilTelemetryGestureRecognizer(
+    _ recognizer: ApplePencilTelemetryGestureRecognizer,
+    didReceive touches: Set<UITouch>,
+    with event: UIEvent,
+    phase: String
+  )
+}
+
+private final class ApplePencilTelemetryGestureRecognizer: UIGestureRecognizer {
+  weak var telemetryDelegate: ApplePencilTelemetryGestureRecognizerDelegate?
+
+  override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+    telemetryDelegate?.applePencilTelemetryGestureRecognizer(
+      self,
+      didReceive: touches,
+      with: event,
+      phase: "began"
+    )
+    state = .began
+  }
+
+  override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
+    telemetryDelegate?.applePencilTelemetryGestureRecognizer(
+      self,
+      didReceive: touches,
+      with: event,
+      phase: "changed"
+    )
+    state = .changed
+  }
+
+  override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
+    telemetryDelegate?.applePencilTelemetryGestureRecognizer(
+      self,
+      didReceive: touches,
+      with: event,
+      phase: "ended"
+    )
+    state = .ended
+  }
+
+  override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) {
+    telemetryDelegate?.applePencilTelemetryGestureRecognizer(
+      self,
+      didReceive: touches,
+      with: event,
+      phase: "cancelled"
+    )
+    state = .cancelled
+  }
+
+  override func canPrevent(_ preventedGestureRecognizer: UIGestureRecognizer) -> Bool {
+    return false
+  }
+
+  override func canBePrevented(by preventingGestureRecognizer: UIGestureRecognizer) -> Bool {
+    return false
   }
 }
 

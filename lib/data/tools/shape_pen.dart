@@ -12,6 +12,7 @@ import 'package:saber/components/canvas/_rectangle_stroke.dart';
 import 'package:saber/components/canvas/_stroke.dart';
 import 'package:saber/data/prefs.dart';
 import 'package:saber/data/tools/pen.dart';
+import 'package:saber/data/tools/pressure_curve.dart';
 import 'package:saber/data/tools/stylus_sample.dart';
 import 'package:saber/i18n/strings.g.dart';
 
@@ -25,6 +26,9 @@ class ShapePen extends Pen {
         icon: shapePenIcon,
         options: stows.lastShapePenOptions.value,
         pressureEnabled: false,
+        pressureCurve: PressureCurve.neutral(),
+        tiltSensitivity: 0,
+        rollSensitivity: 0,
         color: Color(stows.lastShapePenColor.value),
         toolId: .shapePen,
       );
@@ -51,14 +55,17 @@ class ShapePen extends Pen {
   }
 
   @override
-  void onDragUpdate(Offset position, StylusSample? stylusSample) {
-    super.onDragUpdate(position, stylusSample);
+  @override
+  Stroke? onDragUpdate(Offset position, StylusSample? stylusSample) {
+    final completedStrokeSegment = super.onDragUpdate(position, stylusSample);
 
     final isPreviewEnabled = debounceDuration < const Duration(hours: 1);
     final isTimerActive = _detectShapeDebouncer?.isActive ?? false;
     if (isPreviewEnabled && !isTimerActive) {
       _detectShapeDebouncer = Timer(debounceDuration, _detectShape);
     }
+
+    return completedStrokeSegment;
   }
 
   @override
@@ -119,6 +126,7 @@ class ShapePen extends Pen {
           pageIndex: rawStroke.pageIndex,
           page: rawStroke.page,
           toolId: toolId,
+          rollSensitivity: rawStroke.rollSensitivity,
         )..addPoints(polygon);
     }
   }

@@ -17,6 +17,7 @@ import 'package:saber/data/flavor_config.dart';
 import 'package:saber/data/sentry/sentry_consent.dart';
 import 'package:saber/data/tools/highlighter.dart';
 import 'package:saber/data/tools/pen.dart';
+import 'package:saber/data/tools/pressure_curve.dart';
 import 'package:sbn/canvas_background_pattern.dart';
 import 'package:sbn/tool_id.dart';
 import 'package:stow/stow.dart';
@@ -179,6 +180,11 @@ class Stows {
     false,
     volatile: !_isOnMainIsolate,
   );
+  final continuousWritingAutoStraightenWindowMs = PlainStow(
+    'continuousWritingAutoStraightenWindowMs',
+    900,
+    volatile: !_isOnMainIsolate,
+  );
 
   final simplifiedHomeLayout = PlainStow(
     'simplifiedHomeLayout',
@@ -242,6 +248,56 @@ class Stows {
     codec: ApplePencilAction.codec,
     volatile: !_isOnMainIsolate,
   );
+
+  PressureCurve get fountainPenPressureCurve {
+    final legacyCurve = lastFountainPenPressureCurveLegacy.value;
+    if (legacyCurve != 0) return PressureCurve.fromLegacyCurve(legacyCurve);
+    return lastFountainPenPressureCurve.value;
+  }
+
+  PressureCurve get pencilPressureCurve {
+    final legacyCurve = lastPencilPressureCurveLegacy.value;
+    if (legacyCurve != 0) return PressureCurve.fromLegacyCurve(legacyCurve);
+    return lastPencilPressureCurve.value;
+  }
+
+  final lastFountainPenRollSensitivity = PlainStow<double>(
+        'lastFountainPenRollSensitivity',
+        1,
+        volatile: !_isOnMainIsolate,
+      ),
+      lastFountainPenPressureCurveLegacy = PlainStow<double>(
+        'lastFountainPenPressureCurve',
+        0,
+        volatile: !_isOnMainIsolate,
+      ),
+      lastFountainPenPressureCurve = PlainStow.json(
+        'lastFountainPenPressureCurvePoints',
+        PressureCurve.neutral(),
+        fromJson: PressureCurve.fromJson,
+        volatile: !_isOnMainIsolate,
+      ),
+      lastPencilTiltSensitivity = PlainStow<double>(
+        'lastPencilTiltSensitivity',
+        0.25,
+        volatile: !_isOnMainIsolate,
+      ),
+      lastPencilRollSensitivity = PlainStow<double>(
+        'lastPencilRollSensitivity',
+        1,
+        volatile: !_isOnMainIsolate,
+      ),
+      lastPencilPressureCurveLegacy = PlainStow<double>(
+        'lastPencilPressureCurve',
+        0,
+        volatile: !_isOnMainIsolate,
+      ),
+      lastPencilPressureCurve = PlainStow.json(
+        'lastPencilPressureCurvePoints',
+        PressureCurve.neutral(),
+        fromJson: PressureCurve.fromJson,
+        volatile: !_isOnMainIsolate,
+      );
 
   final recentColorsChronological = PlainStow(
     'recentColorsChronological',

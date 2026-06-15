@@ -1,3 +1,5 @@
+// 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -30,6 +32,7 @@ class EditorCoreInfo {
   /// Increment this if earlier versions of the app can't satisfiably read the file.
   ///
   /// Version history:
+  /// - 20: Persist Apple Pencil stylus pose samples for roll/tilt-aware strokes.
   /// - 19: Assets are now stored in separate files, and added the `sba` file format.
   /// - 18: [Pencil] tool introduced
   /// - 17: [PdfEditorImage] introduced
@@ -49,7 +52,7 @@ class EditorCoreInfo {
   /// - 3: Store page sizes for each page
   /// - 2: Store width and height in sbn
   /// - 1: Store version in sbn
-  static const sbnVersion = 19;
+  static const sbnVersion = 20;
 
   /// The reason why the note is read-only,
   /// or `null` if the note is editable.

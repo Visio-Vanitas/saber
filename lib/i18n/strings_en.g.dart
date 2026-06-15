@@ -1141,6 +1141,66 @@ class Translations$editor$penOptions$en {
 
 	/// en: 'Size'
 	String get size => 'Size';
+
+	/// en: 'Advanced'
+	String get advancedSettings => 'Advanced';
+
+	/// en: 'Apply'
+	String get applyAdvancedSettings => 'Apply';
+
+	/// en: 'Paste parameters'
+	String get copyPresetFrom => 'Paste parameters';
+
+	/// en: 'Copy parameters'
+	String get copyPresetTo => 'Copy parameters';
+
+	/// en: 'Smoothing'
+	String get smoothing => 'Smoothing';
+
+	/// en: 'Softens corners after the stroke is drawn'
+	String get smoothingDescription => 'Softens corners after the stroke is drawn';
+
+	/// en: 'Streamline'
+	String get streamline => 'Streamline';
+
+	/// en: 'Follows slower but makes handwriting steadier'
+	String get streamlineDescription => 'Follows slower but makes handwriting steadier';
+
+	/// en: 'Pressure width'
+	String get pressureWidth => 'Pressure width';
+
+	/// en: 'Controls how much pressure changes stroke width'
+	String get pressureWidthDescription => 'Controls how much pressure changes stroke width';
+
+	/// en: 'Pressure curve'
+	String get pressureCurve => 'Pressure curve';
+
+	/// en: 'Tap near a point to grab it; 0% segments ignore pen input'
+	String get pressureCurveDescription => 'Tap near a point to grab it; 0% segments ignore pen input';
+
+	/// en: 'This pen does not use pressure'
+	String get pressureCurveUnavailable => 'This pen does not use pressure';
+
+	/// en: 'Reset pressure curve'
+	String get resetPressureCurve => 'Reset pressure curve';
+
+	/// en: 'Tilt'
+	String get tiltSensitivity => 'Tilt';
+
+	/// en: 'Low pen angles make the stroke wider and darker'
+	String get tiltSensitivityDescription => 'Low pen angles make the stroke wider and darker';
+
+	/// en: 'Roll'
+	String get rollSensitivity => 'Roll';
+
+	/// en: 'Rotates texture or nib angle'
+	String get rollSensitivityDescription => 'Rotates texture or nib angle';
+
+	/// en: 'Writing pause window'
+	String get continuousWritingWindow => 'Writing pause window';
+
+	/// en: 'Skips auto-straighten for strokes started inside this pause'
+	String get continuousWritingWindowDescription => 'Skips auto-straighten for strokes started inside this pause';
 }
 
 // Path: editor.colors

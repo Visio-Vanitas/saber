@@ -23,6 +23,7 @@ class StylusHoverPreview {
     required this.opacity,
     required this.kind,
     required this.invertedStylus,
+    this.directionAngle,
   });
 
   /// The page that contains [position].
@@ -46,6 +47,9 @@ class StylusHoverPreview {
   /// Whether the preview came from an inverted stylus.
   final bool invertedStylus;
 
+  /// The current nib or pencil-roll direction in radians.
+  final double? directionAngle;
+
   /// Calculates the preview opacity from a Flutter pointer hover distance.
   static double opacityFromDistance({
     required double distance,
@@ -66,7 +70,8 @@ class StylusHoverPreview {
         other.color == color &&
         other.opacity == opacity &&
         other.kind == kind &&
-        other.invertedStylus == invertedStylus;
+        other.invertedStylus == invertedStylus &&
+        other.directionAngle == directionAngle;
   }
 
   @override
@@ -78,5 +83,6 @@ class StylusHoverPreview {
     opacity,
     kind,
     invertedStylus,
+    directionAngle,
   );
 }

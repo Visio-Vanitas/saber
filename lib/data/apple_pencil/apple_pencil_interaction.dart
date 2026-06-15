@@ -3,9 +3,12 @@ library;
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
+import 'package:saber/data/tools/stylus_pose.dart';
+import 'package:saber/data/tools/stylus_sample.dart';
 import 'package:stow_codecs/stow_codecs.dart';
 
 /// A hardware gesture emitted by an Apple Pencil body interaction.
@@ -113,6 +116,228 @@ class ApplePencilHoverEvent {
   static double? _numberToDouble(Object? value) {
     return value is num ? value.toDouble() : null;
   }
+}
+
+/// A native Apple Pencil touch sample emitted by the iOS telemetry bridge.
+class ApplePencilTelemetrySample {
+  /// Creates a native Apple Pencil telemetry sample.
+  const ApplePencilTelemetrySample({
+    required this.position,
+    required this.precisePosition,
+    this.timestamp,
+    this.pressure,
+    this.force,
+    this.maximumPossibleForce,
+    this.altitudeAngle,
+    this.azimuthAngle,
+    this.azimuthUnitX,
+    this.azimuthUnitY,
+    this.rollAngle,
+    this.majorRadius,
+    this.majorRadiusTolerance,
+    this.estimatedProperties,
+    this.estimatedPropertiesExpectingUpdates,
+    this.sourceFlags = StylusPoseSourceFlags.real,
+  });
+
+  /// The sample location in Flutter view coordinates.
+  final Offset position;
+
+  /// The precise sample location in Flutter view coordinates.
+  final Offset precisePosition;
+
+  /// The native event timestamp.
+  final double? timestamp;
+
+  /// Normalized native pressure in the range 0 to 1.
+  final double? pressure;
+
+  /// Raw native force.
+  final double? force;
+
+  /// Maximum possible native force.
+  final double? maximumPossibleForce;
+
+  /// Native altitude angle in radians.
+  final double? altitudeAngle;
+
+  /// Native azimuth angle in radians.
+  final double? azimuthAngle;
+
+  /// Native azimuth unit vector x component.
+  final double? azimuthUnitX;
+
+  /// Native azimuth unit vector y component.
+  final double? azimuthUnitY;
+
+  /// Native Apple Pencil Pro roll angle in radians.
+  final double? rollAngle;
+
+  /// Native major touch radius.
+  final double? majorRadius;
+
+  /// Native major touch radius tolerance.
+  final double? majorRadiusTolerance;
+
+  /// UIKit estimated property bitset.
+  final int? estimatedProperties;
+
+  /// UIKit estimated properties still expecting updates.
+  final int? estimatedPropertiesExpectingUpdates;
+
+  /// Bit flags describing the sample source.
+  final int sourceFlags;
+
+  /// Converts this telemetry sample into the editor's current stylus sample.
+  StylusSample toStylusSample() => StylusSample(
+    kind: PointerDeviceKind.stylus,
+    pressure: pressure,
+    timestamp: timestamp,
+    altitudeAngle: altitudeAngle,
+    azimuthAngle: azimuthAngle,
+    azimuthUnitX: azimuthUnitX,
+    azimuthUnitY: azimuthUnitY,
+    rollAngle: rollAngle,
+    sourceFlags: sourceFlags,
+  );
+
+  /// Converts this telemetry sample into a persisted pose sample.
+  StylusPose? toPose({double? strokeStartTimestamp}) =>
+      toStylusSample().toPose(strokeStartTimestamp: strokeStartTimestamp);
+
+  /// Parses a telemetry sample payload emitted by the iOS EventChannel.
+  static ApplePencilTelemetrySample? fromPayload(
+    Object? payload, {
+    int? fallbackSourceFlags,
+  }) {
+    if (payload is! Map) return null;
+
+    final x = _numberToDouble(payload['x']);
+    final y = _numberToDouble(payload['y']);
+    if (x == null || y == null) return null;
+
+    final preciseX = _numberToDouble(payload['preciseX']) ?? x;
+    final preciseY = _numberToDouble(payload['preciseY']) ?? y;
+    final estimatedProperties = _numberToInt(payload['estimatedProperties']);
+    var sourceFlags =
+        _sourceFlagsFromPayload(payload['sourceFlags']) ??
+        fallbackSourceFlags ??
+        StylusPoseSourceFlags.real;
+    if (estimatedProperties != null && estimatedProperties != 0) {
+      sourceFlags |= StylusPoseSourceFlags.estimated;
+    }
+
+    return ApplePencilTelemetrySample(
+      position: Offset(x, y),
+      precisePosition: Offset(preciseX, preciseY),
+      timestamp: _numberToDouble(payload['timestamp']),
+      pressure: _numberToDouble(payload['pressure']),
+      force: _numberToDouble(payload['force']),
+      maximumPossibleForce: _numberToDouble(payload['maximumPossibleForce']),
+      altitudeAngle: _numberToDouble(payload['altitudeAngle']),
+      azimuthAngle: _numberToDouble(payload['azimuthAngle']),
+      azimuthUnitX: _numberToDouble(payload['azimuthUnitX']),
+      azimuthUnitY: _numberToDouble(payload['azimuthUnitY']),
+      rollAngle: _numberToDouble(payload['rollAngle']),
+      majorRadius: _numberToDouble(payload['majorRadius']),
+      majorRadiusTolerance: _numberToDouble(payload['majorRadiusTolerance']),
+      estimatedProperties: estimatedProperties,
+      estimatedPropertiesExpectingUpdates: _numberToInt(
+        payload['estimatedPropertiesExpectingUpdates'],
+      ),
+      sourceFlags: sourceFlags,
+    );
+  }
+}
+
+/// A native Apple Pencil touch event emitted by the iOS telemetry bridge.
+class ApplePencilTelemetryEvent {
+  /// Creates a native Apple Pencil telemetry event.
+  const ApplePencilTelemetryEvent({
+    required this.phase,
+    required this.sample,
+    this.coalescedSamples = const [],
+    this.predictedSamples = const [],
+  });
+
+  /// The lifecycle phase of the native touch.
+  final ApplePencilInteractionPhase phase;
+
+  /// The primary touch sample for this event.
+  final ApplePencilTelemetrySample sample;
+
+  /// Coalesced real samples supplied by UIKit.
+  final List<ApplePencilTelemetrySample> coalescedSamples;
+
+  /// Predicted samples supplied by UIKit.
+  final List<ApplePencilTelemetrySample> predictedSamples;
+
+  /// Whether this event should update the active writing sample.
+  bool get isActive =>
+      phase == ApplePencilInteractionPhase.began ||
+      phase == ApplePencilInteractionPhase.changed;
+
+  /// Real samples suitable for persisted stroke points.
+  Iterable<ApplePencilTelemetrySample> get realSamples =>
+      coalescedSamples.isEmpty ? [sample] : coalescedSamples;
+
+  /// Parses a telemetry payload emitted by the iOS EventChannel.
+  static ApplePencilTelemetryEvent? fromPayload(Object? payload) {
+    if (payload is! Map) return null;
+
+    final phase = ApplePencilInteractionPhase.fromName(
+      payload['phase'] is String ? payload['phase'] as String : null,
+    );
+    if (phase == null) return null;
+
+    final sample = ApplePencilTelemetrySample.fromPayload(payload);
+    if (sample == null) return null;
+
+    return ApplePencilTelemetryEvent(
+      phase: phase,
+      sample: sample,
+      coalescedSamples: _parseSampleList(
+        payload['coalesced'],
+        fallbackSourceFlags: StylusPoseSourceFlags.coalesced,
+      ),
+      predictedSamples: _parseSampleList(
+        payload['predicted'],
+        fallbackSourceFlags: StylusPoseSourceFlags.predicted,
+      ),
+    );
+  }
+
+  static List<ApplePencilTelemetrySample> _parseSampleList(
+    Object? payload, {
+    required int fallbackSourceFlags,
+  }) {
+    if (payload is! List) return const [];
+
+    return payload
+        .map(
+          (sample) => ApplePencilTelemetrySample.fromPayload(
+            sample,
+            fallbackSourceFlags: fallbackSourceFlags,
+          ),
+        )
+        .whereType<ApplePencilTelemetrySample>()
+        .toList(growable: false);
+  }
+}
+
+double? _numberToDouble(Object? value) =>
+    value is num ? value.toDouble() : null;
+
+int? _numberToInt(Object? value) => value is num ? value.toInt() : null;
+
+int? _sourceFlagsFromPayload(Object? value) {
+  if (value is num) return value.toInt();
+  return switch (value) {
+    'real' => StylusPoseSourceFlags.real,
+    'coalesced' => StylusPoseSourceFlags.coalesced,
+    'predicted' => StylusPoseSourceFlags.predicted,
+    _ => null,
+  };
 }
 
 /// A Saber action that can be bound to an Apple Pencil hardware gesture.
@@ -233,6 +458,12 @@ abstract class ApplePencilHoverService {
   Stream<ApplePencilHoverEvent> get events;
 }
 
+/// Provides native Apple Pencil touch telemetry events.
+abstract class ApplePencilTelemetryService {
+  /// The stream of native Apple Pencil telemetry events.
+  Stream<ApplePencilTelemetryEvent> get events;
+}
+
 /// Apple Pencil interaction service backed by an iOS EventChannel.
 class EventChannelApplePencilInteractionService
     implements ApplePencilInteractionService {
@@ -294,6 +525,43 @@ class EventChannelApplePencilHoverService implements ApplePencilHoverService {
         },
         handleError: (error, stackTrace, sink) {
           _log.warning('Apple Pencil hover stream failed', error, stackTrace);
+        },
+      ),
+    );
+  }
+}
+
+/// Apple Pencil telemetry service backed by an iOS EventChannel.
+class EventChannelApplePencilTelemetryService
+    implements ApplePencilTelemetryService {
+  /// Creates an EventChannel-backed Apple Pencil telemetry service.
+  const EventChannelApplePencilTelemetryService();
+
+  static final _log = Logger('ApplePencilTelemetry');
+  static const _eventChannel = EventChannel(
+    'saber/apple_pencil_telemetry/events',
+  );
+
+  @override
+  Stream<ApplePencilTelemetryEvent> get events {
+    if (!Platform.isIOS) return const Stream.empty();
+
+    return _eventChannel.receiveBroadcastStream().transform(
+      StreamTransformer<dynamic, ApplePencilTelemetryEvent>.fromHandlers(
+        handleData: (payload, sink) {
+          final event = ApplePencilTelemetryEvent.fromPayload(payload);
+          if (event == null) {
+            _log.warning('Invalid Apple Pencil telemetry payload: $payload');
+            return;
+          }
+          sink.add(event);
+        },
+        handleError: (error, stackTrace, sink) {
+          _log.warning(
+            'Apple Pencil telemetry stream failed',
+            error,
+            stackTrace,
+          );
         },
       ),
     );

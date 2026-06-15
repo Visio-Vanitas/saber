@@ -1,3 +1,5 @@
+// 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+
 /// Returns a pencil stroke texture,
 /// by applying a noise function to each pixel.
 
@@ -7,6 +9,9 @@
 
 /// Pencil color, represented as a vec3 of RGB values between 0 and 1.
 uniform vec3 uColor;
+
+/// Apple Pencil Pro roll angle in radians.
+uniform float uRollAngle;
 
 /// Output color at a given pixel.
 /// Represented as a vec4 of RGBA values between 0 and 1.
@@ -137,6 +142,10 @@ float easeInOutQuad(float x) {
 
 void main() {
     vec2 fragCoord = FlutterFragCoord().xy;
+    float c = cos(uRollAngle);
+    float s = sin(uRollAngle);
+    mat2 rollRotation = mat2(c, s, -s, c);
+    fragCoord = rollRotation * fragCoord;
 
     const float freq = 0.7;
     // The noise value remapped to be between 0.0 and 1.0

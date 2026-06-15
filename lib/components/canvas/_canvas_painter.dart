@@ -132,7 +132,11 @@ class CanvasPainter extends CustomPainter {
           paint.shader = page.pencilShader
             ..setFloat(0, color.r)
             ..setFloat(1, color.g)
-            ..setFloat(2, color.b);
+            ..setFloat(2, color.b)
+            ..setFloat(
+              3,
+              (stroke.averageRollAngle ?? 0) * stroke.rollSensitivity,
+            );
           paint.maskFilter = _getPencilMaskFilter(stroke.options.size);
         } else {
           // Fast imitation of pencil when zoomed out
@@ -178,7 +182,12 @@ class CanvasPainter extends CustomPainter {
       paint.shader = page.pencilShader
         ..setFloat(0, color.r)
         ..setFloat(1, color.g)
-        ..setFloat(2, color.b);
+        ..setFloat(2, color.b)
+        ..setFloat(
+          3,
+          (currentStroke!.averageRollAngle ?? 0) *
+              currentStroke!.rollSensitivity,
+        );
       paint.maskFilter = _getPencilMaskFilter(currentStroke!.options.size);
     }
 
@@ -288,6 +297,13 @@ class CanvasPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = strokeWidth,
         );
+        _drawStylusHoverDirection(
+          canvas: canvas,
+          preview: preview,
+          color: outlineColor,
+          visibleRadius: visibleRadius,
+          strokeWidth: strokeWidth,
+        );
       case StylusHoverPreviewKind.eraser:
         canvas.drawCircle(
           preview.position,
@@ -298,6 +314,29 @@ class CanvasPainter extends CustomPainter {
             ..strokeWidth = strokeWidth,
         );
     }
+  }
+
+  void _drawStylusHoverDirection({
+    required Canvas canvas,
+    required StylusHoverPreview preview,
+    required Color color,
+    required double visibleRadius,
+    required double strokeWidth,
+  }) {
+    final angle = preview.directionAngle;
+    if (angle == null) return;
+
+    final direction = Offset(cos(angle), sin(angle));
+    final halfLength = max(visibleRadius, preview.radius) * 0.9;
+    canvas.drawLine(
+      preview.position - direction * halfLength,
+      preview.position + direction * halfLength,
+      Paint()
+        ..color = color.withValues(alpha: max(color.a, 0.45))
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = strokeWidth * 1.6,
+    );
   }
 
   static const double _pageIndicatorFontSize = 20;

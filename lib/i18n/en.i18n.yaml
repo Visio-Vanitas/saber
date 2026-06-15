@@ -298,6 +298,26 @@ editor:
     laserPointer: Laser pointer
   penOptions:
     size: Size
+    advancedSettings: Advanced
+    applyAdvancedSettings: Apply
+    copyPresetFrom: Paste parameters
+    copyPresetTo: Copy parameters
+    smoothing: Smoothing
+    smoothingDescription: Softens corners after the stroke is drawn
+    streamline: Streamline
+    streamlineDescription: Follows slower but makes handwriting steadier
+    pressureWidth: Pressure width
+    pressureWidthDescription: Controls how much pressure changes stroke width
+    pressureCurve: Pressure curve
+    pressureCurveDescription: Tap near a point to grab it; 0% segments ignore pen input
+    pressureCurveUnavailable: This pen does not use pressure
+    resetPressureCurve: Reset pressure curve
+    tiltSensitivity: Tilt
+    tiltSensitivityDescription: Low pen angles make the stroke wider and darker
+    rollSensitivity: Roll
+    rollSensitivityDescription: Rotates texture or nib angle
+    continuousWritingWindow: Writing pause window
+    continuousWritingWindowDescription: Skips auto-straighten for strokes started inside this pause
   colors:
     colorPicker: Color picker
     customBrightnessHue: Custom $b $h

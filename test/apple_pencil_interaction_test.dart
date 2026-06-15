@@ -4,6 +4,7 @@ library;
 import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:saber/data/apple_pencil/apple_pencil_interaction.dart';
+import 'package:saber/data/tools/stylus_pose.dart';
 import 'package:saber/data/tools/stylus_sample.dart';
 
 void main() {
@@ -131,6 +132,74 @@ void main() {
     });
   });
 
+  group('ApplePencilTelemetryEvent', () {
+    test(
+      'parses native telemetry payload with coalesced and predicted samples',
+      () {
+        final event = ApplePencilTelemetryEvent.fromPayload({
+          'phase': 'changed',
+          'x': 10,
+          'y': 20,
+          'preciseX': 10.25,
+          'preciseY': 20.5,
+          'timestamp': 100,
+          'pressure': 0.7,
+          'altitudeAngle': 0.9,
+          'azimuthAngle': 1.1,
+          'azimuthUnitX': 0.45,
+          'azimuthUnitY': 0.89,
+          'rollAngle': 0.3,
+          'estimatedProperties': 1,
+          'sourceFlags': StylusPoseSourceFlags.real,
+          'coalesced': [
+            {'x': 9, 'y': 19, 'pressure': 0.6},
+          ],
+          'predicted': [
+            {'x': 11, 'y': 21, 'pressure': 0.8},
+          ],
+        });
+
+        expect(event?.phase, ApplePencilInteractionPhase.changed);
+        expect(event?.isActive, isTrue);
+        expect(event?.sample.precisePosition.dx, 10.25);
+        expect(event?.sample.pressure, 0.7);
+        expect(event?.sample.rollAngle, 0.3);
+        expect(
+          event?.sample.sourceFlags,
+          StylusPoseSourceFlags.real | StylusPoseSourceFlags.estimated,
+        );
+        expect(
+          event?.coalescedSamples.single.sourceFlags,
+          StylusPoseSourceFlags.coalesced,
+        );
+        expect(
+          event?.predictedSamples.single.sourceFlags,
+          StylusPoseSourceFlags.predicted,
+        );
+      },
+    );
+
+    test('converts telemetry sample to stylus sample', () {
+      const sample = ApplePencilTelemetrySample(
+        position: Offset(1, 2),
+        precisePosition: Offset(1.5, 2.5),
+        timestamp: 42,
+        pressure: 0.4,
+        altitudeAngle: 0.8,
+        azimuthAngle: 1.2,
+        rollAngle: 0.6,
+      );
+
+      final stylusSample = sample.toStylusSample();
+
+      expect(stylusSample.isStylus, isTrue);
+      expect(stylusSample.pressure, 0.4);
+      expect(stylusSample.altitudeAngle, 0.8);
+      expect(stylusSample.azimuthAngle, 1.2);
+      expect(stylusSample.rollAngle, 0.6);
+    });
+  });
+
   group('StylusSample', () {
     test('normalizes stylus pressure and keeps tilt data', () {
       const event = PointerMoveEvent(
@@ -148,6 +217,25 @@ void main() {
       expect(sample.pressure, 0.5);
       expect(sample.tilt, 0.25);
       expect(sample.orientation, 0.5);
+    });
+
+    test('converts native fields into a persisted pose', () {
+      const sample = StylusSample(
+        kind: PointerDeviceKind.stylus,
+        timestamp: 12,
+        pressure: 0.75,
+        altitudeAngle: 0.9,
+        azimuthAngle: 1.3,
+        rollAngle: 0.4,
+      );
+
+      final pose = sample.toPose(strokeStartTimestamp: 10);
+
+      expect(pose?.timestampDelta, 2);
+      expect(pose?.pressure, 0.75);
+      expect(pose?.altitudeAngle, 0.9);
+      expect(pose?.azimuthAngle, 1.3);
+      expect(pose?.rollAngle, 0.4);
     });
 
     test('does not invent pressure for non-stylus pointers', () {

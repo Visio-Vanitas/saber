@@ -1,3 +1,5 @@
+// 🤖 Generated wholly or partially with OpenAI Codex (GPT-5).
+
 import 'dart:math';
 
 import 'package:fixnum/fixnum.dart';
@@ -5,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:one_dollar_unistroke_recognizer/one_dollar_unistroke_recognizer.dart';
 import 'package:perfect_freehand/perfect_freehand.dart';
 import 'package:saber/components/canvas/_stroke.dart';
+import 'package:saber/data/tools/stylus_pose.dart';
 import 'package:sbn/has_size.dart';
 
 class CircleStroke extends Stroke {
@@ -94,7 +97,7 @@ class CircleStroke extends Stroke {
 
   @override
   @Deprecated('Cannot add points to a circle stroke.')
-  void addPoint(Offset point, [double? pressure]) {
+  void addPoint(Offset point, [double? pressure, StylusPose? stylusPose]) {
     throw UnsupportedError('Cannot add points to a circle stroke.');
   }
 
