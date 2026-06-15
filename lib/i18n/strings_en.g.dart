@@ -631,6 +631,9 @@ class Translations$settings$prefLabels$en {
 	/// en: 'Allow insecure connections'
 	String get allowInsecureConnections => 'Allow insecure connections';
 
+	/// en: 'Debug data window'
+	String get peripheralDebugDataWindow => 'Debug data window';
+
 	/// en: 'Toolbar position'
 	String get editorToolbarAlignment => 'Toolbar position';
 
@@ -711,6 +714,9 @@ class Translations$settings$prefDescriptions$en {
 
 	/// en: '(Not recommended) Allow Saber to connect to servers with self-signed/untrusted certificates'
 	String get allowInsecureConnections => '(Not recommended) Allow Saber to connect to servers with self-signed/untrusted certificates';
+
+	/// en: 'Shows live stylus coordinates, pressure, roll, and native telemetry while editing'
+	String get peripheralDebugDataWindow => 'Shows live stylus coordinates, pressure, roll, and native telemetry while editing';
 
 	/// en: 'For e-ink displays'
 	String get preferGreyscale => 'For e-ink displays';

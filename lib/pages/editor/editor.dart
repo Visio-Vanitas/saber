@@ -4,11 +4,13 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:collapsible/collapsible.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, visibleForTesting;
+import 'package:flutter/foundation.dart'
+    show ValueListenable, kDebugMode, visibleForTesting;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -49,6 +51,7 @@ import 'package:saber/data/tools/highlighter.dart';
 import 'package:saber/data/tools/laser_pointer.dart';
 import 'package:saber/data/tools/pen.dart';
 import 'package:saber/data/tools/pencil.dart';
+import 'package:saber/data/tools/peripheral_debug_data.dart';
 import 'package:saber/data/tools/select.dart';
 import 'package:saber/data/tools/shape_pen.dart';
 import 'package:saber/data/tools/stylus_hover_preview.dart';
@@ -122,6 +125,199 @@ class Editor extends StatefulWidget {
   State<Editor> createState() => EditorState();
 }
 
+class _PeripheralDebugOverlay extends StatelessWidget {
+  const _PeripheralDebugOverlay({required this.dataListenable});
+
+  final ValueListenable<PeripheralDebugData?> dataListenable;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: SafeArea(
+        child: Align(
+          alignment: Alignment.topLeft,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: ValueListenableBuilder(
+                valueListenable: dataListenable,
+                builder: (context, data, _) {
+                  final colorScheme = ColorScheme.of(context);
+                  return DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface.withValues(alpha: 0.88),
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.9,
+                        ),
+                      ),
+                      borderRadius: const BorderRadius.all(Radius.circular(6)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 12,
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: DefaultTextStyle(
+                        style: TextStyle(
+                          color: colorScheme.onSurface,
+                          fontSize: 11,
+                          height: 1.18,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                        child: data == null
+                            ? Text(
+                                t.settings.prefLabels.peripheralDebugDataWindow,
+                              )
+                            : _PeripheralDebugDataTable(data: data),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PeripheralDebugDataTable extends StatelessWidget {
+  const _PeripheralDebugDataTable({required this.data});
+
+  final PeripheralDebugData data;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          t.settings.prefLabels.peripheralDebugDataWindow,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 6),
+        _DebugDataRow(label: 'source', value: data.source),
+        _DebugDataRow(label: 'active', value: data.active ? 'yes' : 'no'),
+        _DebugDataRow(label: 'kind', value: data.kind?.name ?? '--'),
+        _DebugDataRow(
+          label: 'page',
+          value: data.pageIndex == null ? '--' : '${data.pageIndex! + 1}',
+        ),
+        _DebugDataRow(
+          label: 'global',
+          value: _formatOffset(data.globalPosition),
+        ),
+        _DebugDataRow(
+          label: 'page xy',
+          value: _formatOffset(data.pagePosition),
+        ),
+        _DebugDataRow(
+          label: 'pressure raw',
+          value: _formatPercent(data.rawPressure),
+        ),
+        _DebugDataRow(
+          label: 'pressure curve',
+          value: _formatPercent(data.effectivePressure),
+        ),
+        _DebugDataRow(label: 'force', value: _formatForce(data)),
+        _DebugDataRow(label: 'hover', value: _formatHover(data)),
+        _DebugDataRow(label: 'tilt', value: _formatAngle(data.tilt)),
+        _DebugDataRow(
+          label: 'orientation',
+          value: _formatAngle(data.orientation),
+        ),
+        _DebugDataRow(
+          label: 'altitude',
+          value: _formatAngle(data.altitudeAngle),
+        ),
+        _DebugDataRow(label: 'azimuth', value: _formatAngle(data.azimuthAngle)),
+        _DebugDataRow(label: 'roll', value: _formatAngle(data.rollAngle)),
+        _DebugDataRow(label: 'radius', value: _formatNumber(data.majorRadius)),
+        _DebugDataRow(label: 'timestamp', value: _formatNumber(data.timestamp)),
+        _DebugDataRow(
+          label: 'flags',
+          value: data.sourceFlags?.toString() ?? '--',
+        ),
+        _DebugDataRow(
+          label: 'samples',
+          value:
+              '${data.coalescedCount ?? 0} coalesced / ${data.predictedCount ?? 0} predicted',
+        ),
+      ],
+    );
+  }
+
+  static String _formatOffset(Offset? value) {
+    if (value == null) return '--';
+    return '${value.dx.toStringAsFixed(1)}, ${value.dy.toStringAsFixed(1)}';
+  }
+
+  static String _formatPercent(double? value) {
+    if (value == null) return '--';
+    return '${(value * 100).toStringAsFixed(1)}%';
+  }
+
+  static String _formatNumber(double? value) {
+    if (value == null) return '--';
+    return value.toStringAsFixed(3);
+  }
+
+  static String _formatAngle(double? value) {
+    if (value == null) return '--';
+    return '${(value * 180 / math.pi).toStringAsFixed(1)} deg';
+  }
+
+  static String _formatForce(PeripheralDebugData data) {
+    if (data.force == null) return '--';
+    final force = data.force!.toStringAsFixed(3);
+    final maxForce = data.maximumPossibleForce?.toStringAsFixed(3);
+    if (maxForce == null) return force;
+    return '$force / $maxForce';
+  }
+
+  static String _formatHover(PeripheralDebugData data) {
+    if (data.hoverDistance == null) return '--';
+    final distance = data.hoverDistance!.toStringAsFixed(3);
+    final maxDistance = data.hoverDistanceMax?.toStringAsFixed(3);
+    if (maxDistance == null) return distance;
+    return '$distance / $maxDistance';
+  }
+}
+
+class _DebugDataRow extends StatelessWidget {
+  const _DebugDataRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = ColorScheme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 98,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: colorScheme.onSurface.withValues(alpha: 0.68),
+            ),
+          ),
+        ),
+        Expanded(child: Text(value, textAlign: TextAlign.right)),
+      ],
+    );
+  }
+}
+
 class EditorState extends State<Editor> {
   final log = Logger('EditorState');
 
@@ -193,6 +389,7 @@ class EditorState extends State<Editor> {
   }
 
   ValueNotifier<SavingState> savingState = ValueNotifier(SavingState.saved);
+  final _peripheralDebugData = ValueNotifier<PeripheralDebugData?>(null);
   Timer? _delayedSaveTimer;
   Timer? _watchServerTimer;
 
@@ -574,7 +771,32 @@ class EditorState extends State<Editor> {
     return null;
   }
 
+  ({int pageIndex, Offset pagePosition})? _pagePositionForGlobal(
+    Offset globalPosition,
+  ) {
+    final pageIndex = onWhichPageIsFocalPoint(globalPosition);
+    if (pageIndex == null) return null;
+
+    final renderBox = coreInfo.pages[pageIndex].renderBox;
+    if (renderBox == null) return null;
+
+    return (
+      pageIndex: pageIndex,
+      pagePosition: renderBox.globalToLocal(globalPosition),
+    );
+  }
+
   void onStylusHover(PointerEvent event) {
+    final sample = StylusSample.fromPointerEvent(event);
+    _recordPeripheralDebugData(
+      source: 'flutter hover',
+      active: true,
+      sample: sample,
+      globalPosition: event.position,
+      hoverDistance: event.distance,
+      hoverDistanceMax: event.distanceMax,
+    );
+
     if (!stows.applePencilTipPreview.value || coreInfo.readOnly) {
       clearStylusHoverPreview();
       return;
@@ -591,6 +813,16 @@ class EditorState extends State<Editor> {
   }
 
   void _handleApplePencilHover(ApplePencilHoverEvent event) {
+    const sample = StylusSample(kind: PointerDeviceKind.stylus);
+    _recordPeripheralDebugData(
+      source: 'native hover',
+      active: event.isActive,
+      sample: sample,
+      globalPosition: event.position,
+      hoverDistance: event.zOffset,
+      hoverDistanceMax: event.zOffset == null ? null : 1,
+    );
+
     if (!event.isActive) {
       clearStylusHoverPreview();
       return;
@@ -610,6 +842,48 @@ class EditorState extends State<Editor> {
               distance: zOffset.clamp(0.0, 1.0).toDouble(),
               distanceMax: 1,
             ),
+    );
+  }
+
+  void _recordPeripheralDebugData({
+    required String source,
+    required bool active,
+    StylusSample? sample,
+    Offset? globalPosition,
+    Offset? pagePosition,
+    int? pageIndex,
+    double? force,
+    double? maximumPossibleForce,
+    double? hoverDistance,
+    double? hoverDistanceMax,
+    double? majorRadius,
+    int? coalescedCount,
+    int? predictedCount,
+  }) {
+    if (!stows.peripheralDebugDataWindow.value) return;
+
+    final pageLookup = globalPosition == null
+        ? null
+        : _pagePositionForGlobal(globalPosition);
+    _peripheralDebugData.value = PeripheralDebugData(
+      source: source,
+      updatedAt: DateTime.now(),
+      active: active,
+      kind: sample?.kind ?? currentPointerKind,
+      pageIndex: pageIndex ?? pageLookup?.pageIndex,
+      globalPosition: globalPosition,
+      pagePosition: pagePosition ?? pageLookup?.pagePosition,
+      rawPressure: sample?.pressure,
+      effectivePressure: sample?.pressure,
+      force: force,
+      maximumPossibleForce: maximumPossibleForce,
+      hoverDistance: hoverDistance,
+      hoverDistanceMax: hoverDistanceMax,
+      tilt: sample?.tilt,
+      orientation: sample?.orientation,
+      majorRadius: majorRadius,
+      coalescedCount: coalescedCount,
+      predictedCount: predictedCount,
     );
   }
 
@@ -750,6 +1024,14 @@ class EditorState extends State<Editor> {
 
     final page = coreInfo.pages[dragPageIndex!];
     final position = page.renderBox!.globalToLocal(details.focalPoint);
+    _recordPeripheralDebugData(
+      source: 'draw start',
+      active: true,
+      sample: currentStylusSample,
+      globalPosition: details.focalPoint,
+      pageIndex: dragPageIndex,
+      pagePosition: position,
+    );
     history.canRedo = false;
 
     if (currentTool is Pen) {
@@ -795,6 +1077,14 @@ class EditorState extends State<Editor> {
   void onDrawUpdate(ScaleUpdateDetails details) {
     final page = coreInfo.pages[dragPageIndex!];
     final position = page.renderBox!.globalToLocal(details.focalPoint);
+    _recordPeripheralDebugData(
+      source: 'draw update',
+      active: true,
+      sample: currentStylusSample,
+      globalPosition: details.focalPoint,
+      pageIndex: dragPageIndex,
+      pagePosition: position,
+    );
     final offset = position - previousPosition;
 
     if (currentTool is Pen) {
@@ -911,6 +1201,11 @@ class EditorState extends State<Editor> {
     });
 
     if (shouldSave) autosaveAfterDelay();
+    _recordPeripheralDebugData(
+      source: 'draw end',
+      active: false,
+      sample: currentStylusSample,
+    );
   }
 
   void onInteractionEnd(ScaleEndDetails details) {
@@ -924,6 +1219,13 @@ class EditorState extends State<Editor> {
   void updatePointerData(StylusSample sample) {
     currentPointerKind = sample.kind;
     currentStylusSample = sample.isStylus ? sample : null;
+    if (!sample.isStylus) {
+      _recordPeripheralDebugData(
+        source: 'pointer ended',
+        active: false,
+        sample: sample,
+      );
+    }
   }
 
   void onHovering() {
@@ -2026,7 +2328,20 @@ class EditorState extends State<Editor> {
                   ),
                 ],
               ),
-        body: body,
+        body: ValueListenableBuilder(
+          valueListenable: stows.peripheralDebugDataWindow,
+          child: body,
+          builder: (context, enabled, child) {
+            if (!enabled) return child!;
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                child!,
+                _PeripheralDebugOverlay(dataListenable: _peripheralDebugData),
+              ],
+            );
+          },
+        ),
         floatingActionButton:
             (DynamicMaterialApp.isFullscreen &&
                 !stows.editorToolbarShowInFullscreen.value)
@@ -2381,6 +2696,7 @@ class EditorState extends State<Editor> {
     _lastSeenPointerCountTimer?.cancel();
     _applePencilInteractionSubscription?.cancel();
     _applePencilHoverSubscription?.cancel();
+    _peripheralDebugData.dispose();
 
     _removeKeybindings();
 

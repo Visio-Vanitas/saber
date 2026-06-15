@@ -174,6 +174,11 @@ class Stows {
     true,
     volatile: !_isOnMainIsolate,
   );
+  final peripheralDebugDataWindow = PlainStow(
+    'peripheralDebugDataWindow',
+    false,
+    volatile: !_isOnMainIsolate,
+  );
 
   final simplifiedHomeLayout = PlainStow(
     'simplifiedHomeLayout',

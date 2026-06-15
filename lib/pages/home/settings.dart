@@ -669,6 +669,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   icon: Icons.private_connectivity,
                   pref: stows.allowInsecureConnections,
                 ),
+                SettingsSwitch(
+                  title: t.settings.prefLabels.peripheralDebugDataWindow,
+                  subtitle:
+                      t.settings.prefDescriptions.peripheralDebugDataWindow,
+                  icon: Icons.monitor_heart,
+                  pref: stows.peripheralDebugDataWindow,
+                ),
                 SettingsButton(
                   title: t.logs.viewLogs,
                   subtitle: t.logs.debuggingInfo,

@@ -101,6 +101,7 @@ settings:
     shouldCheckForUpdates: Check for Saber updates
     shouldAlwaysAlertForUpdates: Faster updates
     allowInsecureConnections: Allow insecure connections
+    peripheralDebugDataWindow: Debug data window
     editorToolbarAlignment: Toolbar position
     editorToolbarShowInFullscreen: Show the toolbar in fullscreen mode
     editorAutoInvert: Invert notes in dark mode
@@ -126,6 +127,7 @@ settings:
   prefDescriptions:
     hyperlegibleFont: Increases legibility for users with low vision
     allowInsecureConnections: (Not recommended) Allow Saber to connect to servers with self-signed/untrusted certificates
+    peripheralDebugDataWindow: Shows live stylus coordinates, pressure, roll, and native telemetry while editing
     preferGreyscale: For e-ink displays
     autoClearWhiteboardOnExit: Clears the whiteboard after you exit the app
     disableEraserAfterUse: Automatically switches back to the pen after using the eraser
